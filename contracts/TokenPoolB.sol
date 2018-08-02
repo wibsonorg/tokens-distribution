@@ -34,6 +34,7 @@ contract TokenPoolB is Ownable {
 
   /**
    * @notice Contract constructor.
+   * @param _token instance of an ERC20 token (e.g.: Wibcoin).
    * @param _allowedSpending Maximum amount of token to be distributed.
    * @param _releaseDate Timestamp (in seconds) when tokens can be released.
    */
