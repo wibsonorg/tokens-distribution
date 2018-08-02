@@ -1,0 +1,8 @@
+node_modules
+migrations
+build
+test
+*.md
+*.js
+*.json
+*.lock
