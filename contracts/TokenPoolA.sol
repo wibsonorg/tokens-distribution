@@ -66,9 +66,10 @@ contract TokenPoolA is Ownable {
    *             100         // Amount of tokens to be released
    *           )
    *
-   * @dev Creates a vesting contract that vests its balance of any ERC20 token to the
-   * _beneficiary, gradually in a linear fashion until _start + _duration. By then all
-   * of the balance will have vested.
+   * @dev Invoking this method with _revocable = true will give the ability to the owner
+   *      of revoking the token vesting in any time after the _start period. Tokens already
+   *      vested remain in the TokenVesting contract instance (if not released), the rest
+   *      are returned to this contract.
    * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
    * @param _start the time (as Unix time) at which point vesting starts
    * @param _cliff duration in seconds of the cliff in which tokens will begin to vest
@@ -89,6 +90,7 @@ contract TokenPoolA is Ownable {
   /**
    * @notice Revokes the vesting of the remaining tokens. Tokens are returned
    *         to the TokenPoolA contract.
+   * @dev The `msg.sender` must be the owner of the contract.
    * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
    * @param _tokenVestingContract address of the TokenVesting contract used to
    *        release tokens to the beneficiary
