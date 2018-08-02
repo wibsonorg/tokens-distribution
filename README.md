@@ -30,15 +30,15 @@ npm run test:coverage # To run with coverage
 ### Local
 ```bash
 npm run ganache &
-npm run truffle migrate --reset --compile-all
+npm run truffle -- migrate --reset --compile-all
 npm run truffle console # To test within the console
 ```
 
 ### Any other environment
 For example, `staging`:
 ```bash
-npm run truffle migrate --reset --compile-all --network staging
-npm run truffle console --network staging # To test within the console
+npm run truffle -- migrate --reset --compile-all --network staging
+npm run truffle -- console --network staging # To test within the console
 ```
 
 ## Deployment status
