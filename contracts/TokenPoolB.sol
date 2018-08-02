@@ -14,21 +14,28 @@ import "zeppelin-solidity/contracts/token/ERC20/TokenTimelock.sol";
 contract TokenPoolB is Ownable {
   using SafeERC20 for ERC20Basic;
 
+  // ERC20 token being held
   ERC20Basic token;
 
+  // Timestamp (in seconds) when tokens can be released
   uint256 public releaseDate;
 
+  // Maximum amount of tokens to be distributed
   uint256 public allowedSpending;
 
+  // Tokens already distributed
   uint256 public totalSpent;
 
+  // List of tokens beneficiaries
   address[] public beneficiaries;
 
+  // Mapping of beneficiary to TokenTimelock contracts addresses
   mapping(address => address[]) public beneficiaryDistributionContracts;
 
   /**
    * @notice Contract constructor.
-   * @param paramName Description
+   * @param _allowedSpending Maximum amount of token to be distributed.
+   * @param _releaseDate Timestamp (in seconds) when tokens can be released.
    */
   constructor(
     ERC20Basic _token,
@@ -41,10 +48,18 @@ contract TokenPoolB is Ownable {
   }
 
   /**
-   * @notice What does it do.
-   * @dev The `msg.sender` must be the owner.
-   * @param paramName Description
-   * @param paramName Description
+   * @notice Adds a beneficiary that will be allowed to extract the tokens after
+   *         the release date.
+   * @notice Example:
+             addBeneficiary(`0x123..`, 100)
+             Will create a TokenTimelock instance on which if the `release()` method
+             is called after the release date (specified in this contract constructor),
+             the amount of tokens (100) will be transferred to the
+             beneficiary (`0x123..`).
+   * @dev The `msg.sender` must be the owner of the contract.
+   * @param _beneficiary Beneficiary that will receive the tokens after the
+   * release date.
+   * @param Amount of tokens to be released.
    */
   function addBeneficiary(
     address _beneficiary,
