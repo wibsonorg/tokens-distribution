@@ -25,13 +25,13 @@ contract TokenPoolA is Ownable {
   // List of tokens beneficiaries
   address[] public beneficiaries;
 
-  // Mapping of beneficiary to TokenTimelock contracts addresses
+  // Mapping of beneficiary to TokenVesting contracts addresses
   mapping(address => address[]) public beneficiaryDistributionContracts;
 
   /**
    * @notice Contract constructor.
-   * @param _token instance of an ERC20 standard token (e.g.: Wibcoin)
-   * @param _allowedSpending amount of tokens the contract is allowd to spend
+   * @param _token instance of an ERC20 token (e.g.: Wibcoin)
+   * @param _allowedSpending amount of tokens the contract is allowed to spend
    *        in beneficiaries.
    */
   constructor(
