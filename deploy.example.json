@@ -1,0 +1,16 @@
+{
+  "infuraToken": "foobarbaz",
+  "environments": {
+    "remoteDevelopment": {
+      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
+    },
+    "staging": {
+      "wibcoinAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
+    },
+    "production": {
+      "wibcoinAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
+    }
+  }
+}
