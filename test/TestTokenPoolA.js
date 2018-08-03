@@ -1,9 +1,13 @@
 const TokenPoolA = artifacts.require('./TokenPoolA.sol');
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
 
 contract('TokenPoolA', (accounts) => {
-  const token = Wibcoin.at(Wibcoin.address);
   const owner = accounts[0];
+  let token;
+
+  beforeEach(async () => {
+    token = await Wibcoin.new({ from: owner });
+  });
 
   describe('#constructor', () => {
     it('should pass', async () => {

@@ -1,6 +1,6 @@
 const DeployUtils = require('../utils/deploymentUtils');
 
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
 
 /**
  * Deploy Token to ganache network.
