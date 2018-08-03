@@ -48,7 +48,7 @@ fi
 if [ "$SOLIDITY_COVERAGE" = true ]; then
   node_modules/.bin/solidity-coverage
 elif [ "$INSPECT" = true ]; then
-  node inspect node_modules/.bin/truffle test "$@"
+  node inspect node_modules/.bin/truffle test --network test "$@"
 else
-  node_modules/.bin/truffle test "$@"
+  node_modules/.bin/truffle test --network test "$@"
 fi

@@ -9,9 +9,9 @@ module.exports = (deployer, network) => {
     tokenTimelockPool: timelock,
   } = DeployUtils.getEnvironmentConfig(network);
 
-  if (!DeployUtils.isLocal(network)) {
-    const owner = DeployUtils.getEnvironmentAccounts(network);
+  const { owner } = DeployUtils.getEnvironmentAccounts(network);
 
+  if (owner) {
     deployer
       .deploy(TokenVestingPool, vesting.tokenAdress, vesting.totalFunds, {
         from: owner,
