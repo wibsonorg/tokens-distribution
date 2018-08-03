@@ -1,9 +1,8 @@
 pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
-
-import "./Wibcoin.sol";
 
 /**
  * @title TokenPoolA
@@ -12,10 +11,10 @@ import "./Wibcoin.sol";
  * @dev TODO
  */
 contract TokenPoolA is Ownable {
-  using SafeERC20 for Wibcoin;
+  using SafeERC20 for ERC20Basic;
 
-  // Token being held
-  Wibcoin token;
+  // ERC20 token being held
+  ERC20Basic token;
 
   // Maximum amount of tokens to be distributed
   uint256 public allowedSpending;
@@ -31,15 +30,15 @@ contract TokenPoolA is Ownable {
 
   /**
    * @notice Contract constructor.
-   * @param _tokenAddr address of the token being sold
+   * @param _token instance of an ERC20 token (e.g.: Wibcoin)
    * @param _allowedSpending amount of tokens the contract is allowed to spend
    *        in beneficiaries.
    */
   constructor(
-    address _tokenAddr,
+    ERC20Basic _token,
     uint256 _allowedSpending
   ) {
-    token = Wibcoin(_tokenAddr);
+    token = _token;
     allowedSpending = _allowedSpending;
   }
 
