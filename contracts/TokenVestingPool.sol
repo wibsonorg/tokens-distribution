@@ -36,6 +36,9 @@ contract TokenVestingPool is Ownable {
   // Mapping of beneficiary to TokenVesting contracts addresses
   mapping(address => address[]) public beneficiaryDistributionContracts;
 
+  // Tracks the distribution contracts created by this contract.
+  mapping(address => bool) private distributionContracts;
+
   modifier validAddress(address _addr) {
     require(_addr != address(0));
     require(_addr != address(this));
@@ -110,14 +113,22 @@ contract TokenVestingPool is Ownable {
    *         to the TokenVestingPool contract.
    * @dev The `msg.sender` must be the owner of the contract.
    * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
-   * @param _tokenVestingContract address of the TokenVesting contract used to
+   * @param _tokenVesting address of the TokenVesting contract used to
    *        release tokens to the beneficiary
    * @return true if the tokens were revoked successfully, reverts otherwise.
    */
   function revoke(
     address _beneficiary,
-    address _tokenVestingContract
-  ) public onlyOwner returns (bool) {
+    address _tokenVesting
+  ) public onlyOwner validAddress(_beneficiary) validAddress(_tokenVesting)
+  returns (bool) {
+    TokenVesting tv = TokenVesting(_tokenVesting);
+    require(beneficiaryExists(_beneficiary));
+    require(distributionContracts[_tokenVesting]);
+    require(tv.beneficiary() == _beneficiary);
+
+    tv.revoke(token);
+    return true;
   }
 
   /**
@@ -129,5 +140,11 @@ contract TokenVestingPool is Ownable {
     address _beneficiary
   ) public view validAddress(_beneficiary) returns (address[]) {
     return beneficiaryDistributionContracts[_beneficiary];
+  }
+
+  function beneficiaryExists(
+    address _beneficiary
+  ) internal view returns (bool) {
+    return beneficiaryDistributionContracts[_beneficiary].length > 0;
   }
 }
