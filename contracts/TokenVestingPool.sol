@@ -87,6 +87,7 @@ contract TokenVestingPool is Ownable {
    * @param _duration duration in seconds of the period in which the tokens will vest
    * @param _revocable whether the vesting is revocable or not
    * @param _amount amount of tokens to be released
+   * @return address for the new TokenVesting contract instance.
    */
   function addBeneficiary(
     address _beneficiary,
@@ -95,7 +96,7 @@ contract TokenVestingPool is Ownable {
     uint256 _duration,
     bool _revocable,
     uint256 _amount
-  ) public onlyOwner {
+  ) public onlyOwner returns (address) {
   }
 
   /**
@@ -105,10 +106,11 @@ contract TokenVestingPool is Ownable {
    * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
    * @param _tokenVestingContract address of the TokenVesting contract used to
    *        release tokens to the beneficiary
+   * @return true if the tokens were revoked successfully, reverts otherwise.
    */
   function revoke(
     address _beneficiary,
     address _tokenVestingContract
-  ) public onlyOwner {
+  ) public onlyOwner returns (bool) {
   }
 }
