@@ -36,6 +36,12 @@ contract TokenVestingPool is Ownable {
   // Mapping of beneficiary to TokenVesting contracts addresses
   mapping(address => address[]) public beneficiaryDistributionContracts;
 
+  modifier validAddress(address _addr) {
+    require(_addr != address(0));
+    require(_addr != address(this));
+    _;
+  }
+
   /**
    * @notice Contract constructor. It creates an instance of TokenVestingPool bounded
    * to a specific ERC20 token and a total amount of funds to be given to future
@@ -112,5 +118,16 @@ contract TokenVestingPool is Ownable {
     address _beneficiary,
     address _tokenVestingContract
   ) public onlyOwner returns (bool) {
+  }
+
+  /**
+   * @notice
+   * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
+   * @return List of TokenVesting addresses.
+   */
+  function getDistributionContracts(
+    address _beneficiary
+  ) public view validAddress(_beneficiary) returns (address[]) {
+    return beneficiaryDistributionContracts[_beneficiary];
   }
 }
