@@ -1,9 +1,9 @@
 pragma solidity ^0.4.24;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "zeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
-import "zeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
 
+import "./Wibcoin.sol";
 
 /**
  * @title TokenPoolA
@@ -12,10 +12,10 @@ import "zeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
  * @dev TODO
  */
 contract TokenPoolA is Ownable {
-  using SafeERC20 for ERC20Basic;
+  using SafeERC20 for Wibcoin;
 
-  // ERC20 token being held
-  ERC20Basic token;
+  // Token being held
+  Wibcoin token;
 
   // Maximum amount of tokens to be distributed
   uint256 public allowedSpending;
@@ -31,15 +31,15 @@ contract TokenPoolA is Ownable {
 
   /**
    * @notice Contract constructor.
-   * @param _token instance of an ERC20 token (e.g.: Wibcoin)
+   * @param _tokenAddr address of the token being sold
    * @param _allowedSpending amount of tokens the contract is allowed to spend
    *        in beneficiaries.
    */
   constructor(
-    ERC20Basic _token,
+    address _tokenAddr,
     uint256 _allowedSpending
   ) {
-    token = _token;
+    token = Wibcoin(_tokenAddr);
     allowedSpending = _allowedSpending;
   }
 
@@ -61,8 +61,9 @@ contract TokenPoolA is Ownable {
    *             `0x123..`,  // Beneficiary
    *             1533847025, // The vesting period starts this day
    *             172800,     // Tokens are released after two weeks
-   *             345600,     // The release period will last two weeks after the cliff period
-   *                         // ended. Tokens will be released uniformly during this period.
+   *             345600,     // The release period will start after the cliff period and
+   *                         // it will last for two weeks. Tokens will be released uniformly
+   *                         // during this period.
    *             true,       // Remaining amount of tokens can be revoked
    *             100         // Amount of tokens to be released
    *           )
