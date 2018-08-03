@@ -1,11 +1,6 @@
 const TokenTimelockPool = artifacts.require('./TokenTimelockPool.sol');
 const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
 
-// FIXME
-function assertRevert(error) {
-  assert(error.toString().includes('revert'), error.toString());
-}
-
 contract('TokenTimelockPool', (accounts) => {
   const owner = accounts[0];
   const releaseDate = Date.now() / 1000 + 60 * 60 * 24;
@@ -150,13 +145,13 @@ contract('TokenTimelockPool', (accounts) => {
 
 
   describe('#getDistributionContracts', () => {
-    it('returns the distribution contracts for a given beneficiary', async () => {
+    it.skip('returns the distribution contracts for a given beneficiary', async () => {
     });
 
-    it('returns null if beneficiary has not been added', async () => {
+    it.skip('returns null if beneficiary has not been added', async () => {
     });
 
-    it('does not return the distribution contracts if beneficiary is not a valid address', async () => {
+    it.skip('does not return the distribution contracts if beneficiary is not a valid address', async () => {
     });
   });
 });
