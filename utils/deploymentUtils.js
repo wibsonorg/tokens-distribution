@@ -26,20 +26,6 @@ exports.getProvider = function getProvider(network, environment) {
   return new HDWalletProvider(envConfig.mnemonic, infura);
 };
 
-exports.isLocal = function isLocal(environment) { return environment === 'development' || environment === 'test'; };
-
 exports.getEnvironmentAccounts = function getEnvironmentAccounts(environment) {
-  const config = getEnvironmentConfig(environment);
-  return config.accounts;
-};
-
-exports.getLocalAccounts = function getLocalAccounts(accounts) {
-  return {
-    owner: accounts[0],
-  };
-};
-
-exports.getWibcoinAddress = function getWibcoinAddress(environment) {
-  const config = getEnvironmentConfig(environment);
-  return config.wibcoinAddress;
+  return getEnvironmentConfig(environment);
 };
