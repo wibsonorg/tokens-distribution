@@ -32,12 +32,3 @@ exports.getEnvironmentAccounts = function getEnvironmentAccounts(environment) {
   const config = getEnvironmentConfig(environment);
   return config.accounts;
 };
-
-exports.getLocalAccounts = function getLocalAccounts(accounts) {
-  return {
-    owner: accounts[0],
-    beneficiary1: accounts[1],
-    beneficiary2: accounts[2],
-    beneficiary3: accounts[3],
-  };
-};
