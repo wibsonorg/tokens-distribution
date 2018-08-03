@@ -31,8 +31,7 @@ const evmIncreaseTime = time => rpc('evm_increaseTime', [time]);
 contract('TokenVestingPool', (accounts) => {
   const owner = accounts[0];
   const beneficiary1 = accounts[1];
-  const beneficiary2 = accounts[1];
-  const beneficiary3 = accounts[1];
+  const beneficiary2 = accounts[2];
   const zeroAddress = '0x0000000000000000000000000000000000000000';
   const fakeAddress = '0x0123123123123123123123123123123123123123';
 
@@ -76,6 +75,19 @@ contract('TokenVestingPool', (accounts) => {
 
     beforeEach(async () => {
       contract = await TokenVestingPool.new(token.address, 100, { from: owner });
+      await token.transfer(contract.address, 100);
+    });
+
+    it('does not add a beneficiary when the beneficiary is the owner', async () => {
+      try {
+        await contract.addBeneficiary(
+          owner, start, oneDay, oneWeek, false, 10,
+          { from: owner },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
     });
 
     it('does not add a beneficiary when the address is invalid', async () => {
@@ -97,7 +109,7 @@ contract('TokenVestingPool', (accounts) => {
     it('does not add a beneficiary when the duration time is lesser than the cliff time', async () => {
       try {
         await contract.addBeneficiary(
-          zeroAddress, start, oneWeek, oneDay, false, 10,
+          beneficiary1, start, oneWeek, oneDay, false, 10,
           { from: owner },
         );
         assert.fail();
@@ -110,6 +122,21 @@ contract('TokenVestingPool', (accounts) => {
       try {
         await contract.addBeneficiary(
           beneficiary1, start, oneDay, oneWeek, false, 1000,
+          { from: owner },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('does not add a beneficiary when the token balance is not enough', async () => {
+      const anotherContract = await TokenVestingPool.new(token.address, 100, { from: owner });
+      await token.transfer(anotherContract.address, 10);
+
+      try {
+        await anotherContract.addBeneficiary(
+          beneficiary1, start, oneDay, oneWeek, false, 100,
           { from: owner },
         );
         assert.fail();
@@ -131,21 +158,21 @@ contract('TokenVestingPool', (accounts) => {
     });
 
     it('adds a beneficiary to the token pool', async () => {
-      const tx = await contract.addBeneficiary(
+      const { receipt: { status } } = await contract.addBeneficiary(
         beneficiary1, start, oneDay, oneWeek, false, 10,
         { from: owner },
       );
 
-      assert.ok(tx.status === '0x1', 'Could not add beneficiary');
+      assert.ok(status === '0x1', 'Could not add beneficiary');
     });
 
     it('adds a beneficiary even if the start date precedes the invocation of this method', async () => {
-      const tx = await contract.addBeneficiary(
+      const { receipt: { status } } = await contract.addBeneficiary(
         beneficiary1, start - oneWeek, oneDay, oneWeek, false, 10,
         { from: owner },
       );
 
-      assert.ok(tx.status === '0x1', 'Could not add beneficiary');
+      assert.ok(status === '0x1', 'Could not add beneficiary');
     });
 
     it('adds another token vesting contract when the beneficiary exists in the pool', async () => {
@@ -153,21 +180,21 @@ contract('TokenVestingPool', (accounts) => {
         beneficiary1, start - oneWeek, oneDay, oneWeek, false, 10,
         { from: owner },
       );
-      const tx = await contract.addBeneficiary(
+      const { receipt: { status } } = await contract.addBeneficiary(
         beneficiary1, start, oneDay, oneWeek, false, 15,
         { from: owner },
       );
 
-      assert.ok(tx.status === '0x1', 'Could not add vesting contract');
+      assert.ok(status === '0x1', 'Could not add vesting contract');
     });
 
     it('adds a beneficiary to the token pool with revocable tokens', async () => {
-      const tx = await contract.addBeneficiary(
+      const { receipt: { status } } = await contract.addBeneficiary(
         beneficiary1, start, oneDay, oneWeek, true, 20,
         { from: owner },
       );
 
-      assert.ok(tx.status === '0x1', 'Could not add beneficiary');
+      assert.ok(status === '0x1', 'Could not add beneficiary');
     });
 
     it('adds a beneficiary even if another token vesting contract was revoked for the same beneficiary', async () => {
@@ -176,8 +203,11 @@ contract('TokenVestingPool', (accounts) => {
         { from: owner },
       );
       const contracts = await contract.getDistributionContracts(beneficiary1);
-      const revokeTx = await contract.revoke(beneficiary1, contracts[0], { from: owner });
-      const addTx = await contract.addBeneficiary(
+      const { receipt: revokeTx } = await contract.revoke(
+        beneficiary1, contracts[0],
+        { from: owner },
+      );
+      const { receipt: addTx } = await contract.addBeneficiary(
         beneficiary1, start, oneDay, oneWeek, true, 20,
         { from: owner },
       );
@@ -192,8 +222,11 @@ contract('TokenVestingPool', (accounts) => {
         { from: owner },
       );
       const contracts = await contract.getDistributionContracts(beneficiary2);
-      const revokeTx = await contract.revoke(beneficiary2, contracts[0], { from: owner });
-      const addTx = await contract.addBeneficiary(
+      const { receipt: revokeTx } = await contract.revoke(
+        beneficiary2, contracts[0],
+        { from: owner },
+      );
+      const { receipt: addTx } = await contract.addBeneficiary(
         beneficiary1, start, oneDay, oneWeek, true, 20,
         { from: owner },
       );
