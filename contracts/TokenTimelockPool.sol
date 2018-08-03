@@ -57,7 +57,11 @@ contract TokenTimelockPool is Ownable {
     ERC20Basic _token,
     uint256 _totalFunds,
     uint256 _releaseDate
-  ) public {
+  ) public validAddress(_token) {
+    _token.balanceOf(0x0); // Check if the token at least appears to be an ERC-20 token
+    require(_totalFunds > 0);
+    require(_releaseDate > block.timestamp);
+
     token = _token;
     totalFunds = _totalFunds;
     releaseDate = _releaseDate;
@@ -83,6 +87,7 @@ contract TokenTimelockPool is Ownable {
     uint256 _amount
   ) public onlyOwner validAddress(_beneficiary) returns (address) {
     require(_beneficiary != owner);
+    require(_amount > 0);
 
     // We check there are sufficient funds and actual token balance.
     bool sufficientFunds = (totalFunds - distributedTokens) >= _amount;
