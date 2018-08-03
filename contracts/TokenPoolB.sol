@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "zeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
-import "zeppelin-solidity/contracts/token/ERC20/TokenTimelock.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/TokenTimelock.sol";
 
 
 /**
@@ -34,7 +34,7 @@ contract TokenPoolB is Ownable {
 
   /**
    * @notice Contract constructor.
-   * @param _token instance of an ERC20 token (e.g.: Wibcoin).
+   * @param _token instance of an ERC20 token (e.g.: Wibcoin)
    * @param _allowedSpending Maximum amount of token to be distributed.
    * @param _releaseDate Timestamp (in seconds) when tokens can be released.
    */
@@ -60,7 +60,7 @@ contract TokenPoolB is Ownable {
    * @dev The `msg.sender` must be the owner of the contract.
    * @param _beneficiary Beneficiary that will receive the tokens after the
    * release date.
-   * @param Amount of tokens to be released.
+   * @param _amount of tokens to be released.
    */
   function addBeneficiary(
     address _beneficiary,
