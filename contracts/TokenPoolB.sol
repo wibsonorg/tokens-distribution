@@ -4,6 +4,7 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/TokenTimelock.sol";
 
+
 /**
  * @title TokenPoolB
  * @author Wibson Development Team <developers@wibson.org>
