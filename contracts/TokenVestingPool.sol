@@ -47,7 +47,7 @@ contract TokenVestingPool is Ownable {
   constructor(
     ERC20Basic _token,
     uint256 _totalFunds
-  ) {
+  ) public {
     token = _token;
     totalFunds = _totalFunds;
   }

@@ -1,9 +1,8 @@
-const TokenPoolB = artifacts.require('./TokenPoolB.sol');
+const TokenVestingPool = artifacts.require('./TokenVestingPool.sol');
 const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
 
-contract('TokenPoolB', (accounts) => {
+contract('TokenVestingPool', (accounts) => {
   const owner = accounts[0];
-  const releaseDate = (Date.now() / 1000) + 60 * 60 * 24;
   let token;
 
   beforeEach(async () => {
@@ -12,7 +11,7 @@ contract('TokenPoolB', (accounts) => {
 
   describe('#constructor', () => {
     it('should pass', async () => {
-      const contract = await TokenPoolB.new(token.address, 1000, releaseDate, { from: owner });
+      const contract = await TokenVestingPool.new(token.address, 1000, { from: owner });
       assert.ok(contract !== null);
     });
   });

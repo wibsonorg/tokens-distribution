@@ -22,6 +22,9 @@ contract TokenTimelockPool is Ownable {
   // ERC20 token being held
   ERC20Basic token;
 
+  // Timestamp (in seconds) when tokens can be released
+  uint256 public releaseDate;
+
   // Maximum amount of tokens to be distributed
   uint256 public totalFunds;
 
@@ -44,7 +47,7 @@ contract TokenTimelockPool is Ownable {
     ERC20Basic _token,
     uint256 _totalFunds,
     uint256 _releaseDate
-  ) {
+  ) public {
     token = _token;
     totalFunds = _totalFunds;
     releaseDate = _releaseDate;
