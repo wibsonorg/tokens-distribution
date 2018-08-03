@@ -66,10 +66,11 @@ contract TokenTimelockPool is Ownable {
    * @param _beneficiary Beneficiary that will receive the tokens after the
    * release date.
    * @param _amount of tokens to be released.
+   * @return address for the new TokenVesting contract instance.
    */
   function addBeneficiary(
     address _beneficiary,
     uint256 _amount
-  ) public onlyOwner {
+  ) public onlyOwner returns (address) {
   }
 }
