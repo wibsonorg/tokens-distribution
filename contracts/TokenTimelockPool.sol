@@ -6,25 +6,27 @@ import "zeppelin-solidity/contracts/token/ERC20/TokenTimelock.sol";
 
 
 /**
- * @title TokenPoolB
+ * @title TokenTimelockPool
  * @author Wibson Development Team <developers@wibson.org>
- * @notice TODO
- * @dev TODO
+ * @notice This contract models a pool of tokens to be distributed among beneficiaries,
+ * releasing the entire pool on a specific date. There is no need to know the
+ * beneficiaries in advance, since the contract allows to add them as time goes by.
+ * Note that tokens are NOT revocable.
+ * Tokens that were not distributed by the release date will stay in the pool until
+ * they are assigned. In which case, the new beneficiary will be able to release
+ * them immediately.
  */
-contract TokenPoolB is Ownable {
+contract TokenTimelockPool is Ownable {
   using SafeERC20 for ERC20Basic;
 
   // ERC20 token being held
   ERC20Basic token;
 
-  // Timestamp (in seconds) when tokens can be released
-  uint256 public releaseDate;
-
   // Maximum amount of tokens to be distributed
-  uint256 public allowedSpending;
+  uint256 public totalFunds;
 
   // Tokens already distributed
-  uint256 public totalSpent;
+  uint256 public distributedTokens;
 
   // List of tokens beneficiaries
   address[] public beneficiaries;
@@ -35,16 +37,16 @@ contract TokenPoolB is Ownable {
   /**
    * @notice Contract constructor.
    * @param _token instance of an ERC20 token (e.g.: Wibcoin).
-   * @param _allowedSpending Maximum amount of token to be distributed.
+   * @param _totalFunds Maximum amount of token to be distributed.
    * @param _releaseDate Timestamp (in seconds) when tokens can be released.
    */
   constructor(
     ERC20Basic _token,
-    uint256 _allowedSpending,
+    uint256 _totalFunds,
     uint256 _releaseDate
   ) {
     token = _token;
-    allowedSpending = _allowedSpending;
+    totalFunds = _totalFunds;
     releaseDate = _releaseDate;
   }
 

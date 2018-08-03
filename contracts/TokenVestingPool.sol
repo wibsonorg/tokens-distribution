@@ -6,47 +6,56 @@ import "zeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
 
 
 /**
- * @title TokenPoolA
+ * @title TokenVestingPool
  * @author Wibson Development Team <developers@wibson.org>
- * @notice TODO
- * @dev TODO
+ * @notice This contract models a pool of tokens to be distributed among beneficiaries
+ * with different lock-up and vesting conditions. There is no need to know the
+ * beneficiaries in advance, since the contract allows to add them as time goes by.
+ * Optionally, when assigning tokens to a specific beneficiary, the contract owner
+ * may decide to make them revocable for that particular case. In which case, the
+ * tokens would be refunded to the pool (not the contract owner).
+ * @dev There is only one method to add a beneficiary. By doing this, not only
+ * both modes (lock-up and vesting) can be achieved, but they can also be combined
+ * as suitable.
  */
-contract TokenPoolA is Ownable {
+contract TokenVestingPool is Ownable {
   using SafeERC20 for ERC20Basic;
 
   // ERC20 token being held
   ERC20Basic token;
 
   // Maximum amount of tokens to be distributed
-  uint256 public allowedSpending;
+  uint256 public totalFunds;
 
   // Tokens already distributed
-  uint256 public totalSpent;
+  uint256 public distributedTokens;
 
-  // List of tokens beneficiaries
+  // List of beneficiaries added to the pool
   address[] public beneficiaries;
 
   // Mapping of beneficiary to TokenVesting contracts addresses
   mapping(address => address[]) public beneficiaryDistributionContracts;
 
   /**
-   * @notice Contract constructor.
+   * @notice Contract constructor. It creates an instance of TokenVestingPool bounded
+   * to a specific ERC20 token and a total amount of funds to be given to future
+   * beneficiaries.
    * @param _token instance of an ERC20 token (e.g.: Wibcoin)
-   * @param _allowedSpending amount of tokens the contract is allowed to spend
+   * @param _totalFunds amount of tokens the contract is allowed to spend
    *        in beneficiaries.
    */
   constructor(
     ERC20Basic _token,
-    uint256 _allowedSpending
+    uint256 _totalFunds
   ) {
     token = _token;
-    allowedSpending = _allowedSpending;
+    totalFunds = _totalFunds;
   }
 
   /**
    * @notice Assigns a token release point to a beneficiary. A beneficiary can have
    *         many token release points.
-   *         Example 1 - Hard Cliff mode:
+   *         Example 1 - Lock-up mode:
    *           contract.addBeneficiary(
    *             `0x123..`,  // Beneficiary
    *             1533847025, // The vesting period starts this day
@@ -67,7 +76,7 @@ contract TokenPoolA is Ownable {
    *             100         // Amount of tokens to be released
    *           )
    *
-   * @dev Invoking this method with _revocable = true will give the ability to the owner
+   * @dev Invoking this method with _revocable = true will give the owner the ability
    *      of revoking the token vesting in any time after the _start period. Tokens already
    *      vested remain in the TokenVesting contract instance (if not released), the rest
    *      are returned to this contract.
@@ -90,7 +99,7 @@ contract TokenPoolA is Ownable {
 
   /**
    * @notice Revokes the vesting of the remaining tokens. Tokens are returned
-   *         to the TokenPoolA contract.
+   *         to the TokenVestingPool contract.
    * @dev The `msg.sender` must be the owner of the contract.
    * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
    * @param _tokenVestingContract address of the TokenVesting contract used to
