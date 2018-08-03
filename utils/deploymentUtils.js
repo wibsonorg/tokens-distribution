@@ -32,14 +32,3 @@ exports.getEnvironmentAccounts = function getEnvironmentAccounts(environment) {
   const config = getEnvironmentConfig(environment);
   return config.accounts;
 };
-
-exports.getLocalAccounts = function getLocalAccounts(accounts) {
-  return {
-    owner: accounts[0],
-  };
-};
-
-exports.getWibcoinAddress = function getWibcoinAddress(environment) {
-  const config = getEnvironmentConfig(environment);
-  return config.wibcoinAddress;
-};

@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "zeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
-import "zeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
 
 
 /**
@@ -70,8 +70,9 @@ contract TokenVestingPool is Ownable {
    *             `0x123..`,  // Beneficiary
    *             1533847025, // The vesting period starts this day
    *             172800,     // Tokens are released after two weeks
-   *             345600,     // The release period will last two weeks after the cliff period
-   *                         // ended. Tokens will be released uniformly during this period.
+   *             345600,     // The release period will start after the cliff period and
+   *                         // it will last for two weeks. Tokens will be released uniformly
+   *                         // during this period.
    *             true,       // Remaining amount of tokens can be revoked
    *             100         // Amount of tokens to be released
    *           )
