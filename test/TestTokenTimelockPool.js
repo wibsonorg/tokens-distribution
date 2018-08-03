@@ -1,3 +1,5 @@
+const { assertRevert } = require('./utils/helpers');
+
 const TokenTimelockPool = artifacts.require('./TokenTimelockPool.sol');
 const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
 
