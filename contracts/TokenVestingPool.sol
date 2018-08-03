@@ -16,7 +16,8 @@ import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
  * tokens would be refunded to the pool (not the contract owner).
  * @dev There is only one method to add a beneficiary. By doing this, not only
  * both modes (lock-up and vesting) can be achieved, but they can also be combined
- * as suitable.
+ * as suitable. Moreover, total funds and distributed tokens are controlled to
+ * avoid refills done by transfering tokens through the ERC20.
  */
 contract TokenVestingPool is Ownable {
   using SafeERC20 for ERC20Basic;
