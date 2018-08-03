@@ -6,6 +6,11 @@
         "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
         "totalFunds": 1000000
       },
+      "tokenPoolB": {
+        "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+        "totalFunds": 1000000,
+        "releaseDate": 1669014000
+      },
       "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
     },
     "staging": {
@@ -13,12 +18,22 @@
         "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
         "totalFunds": 1000000
       },
+      "tokenPoolB": {
+        "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+        "totalFunds": 1000000,
+        "releaseDate": 1669014000
+      },
       "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
     },
     "production": {
       "tokenPoolA": {
         "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
         "totalFunds": 1000000
+      },
+      "tokenPoolB": {
+        "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+        "totalFunds": 1000000,
+        "releaseDate": 1669014000
       },
       "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
     }
