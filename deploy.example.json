@@ -2,14 +2,24 @@
   "infuraToken": "foobarbaz",
   "environments": {
     "remoteDevelopment": {
+      "tokenPoolA": {
+        "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+        "totalFunds": 1000000
+      },
       "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
     },
     "staging": {
-      "wibcoinAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+      "tokenPoolA": {
+        "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+        "totalFunds": 1000000
+      },
       "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
     },
     "production": {
-      "wibcoinAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+      "tokenPoolA": {
+        "tokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+        "totalFunds": 1000000
+      },
       "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
     }
   }

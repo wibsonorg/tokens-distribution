@@ -41,8 +41,3 @@ exports.getLocalAccounts = function getLocalAccounts(accounts) {
     beneficiary3: accounts[3],
   };
 };
-
-exports.getWibcoinAddress = function getWibcoinAddress(environment) {
-  const config = getEnvironmentConfig(environment);
-  return config.wibcoinAddress;
-};
