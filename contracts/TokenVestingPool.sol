@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
-
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title TokenVestingPool
@@ -16,10 +16,12 @@ import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
  * tokens would be refunded to the pool (not the contract owner).
  * @dev There is only one method to add a beneficiary. By doing this, not only
  * both modes (lock-up and vesting) can be achieved, but they can also be combined
- * as suitable.
+ * as suitable. Moreover, total funds and distributed tokens are controlled to
+ * avoid refills done by transfering tokens through the ERC20.
  */
 contract TokenVestingPool is Ownable {
   using SafeERC20 for ERC20Basic;
+  using SafeMath for uint256;
 
   // ERC20 token being held
   ERC20Basic token;
@@ -56,9 +58,12 @@ contract TokenVestingPool is Ownable {
   constructor(
     ERC20Basic _token,
     uint256 _totalFunds
-  ) public {
+  ) public validAddress(_token) {
+    require(_totalFunds > 0);
+
     token = _token;
     totalFunds = _totalFunds;
+    distributedTokens = 0;
   }
 
   /**
@@ -105,7 +110,36 @@ contract TokenVestingPool is Ownable {
     uint256 _duration,
     bool _revocable,
     uint256 _amount
-  ) public onlyOwner returns (address) {
+  ) public validAddress(_beneficiary) onlyOwner returns (address) {
+    require(_beneficiary != owner);
+
+    // Check there are sufficient funds and actual token balance.
+    bool sufficientFunds = (totalFunds - distributedTokens) >= _amount;
+    bool sufficientBalance = token.balanceOf(address(this)) >= _amount;
+    require(sufficientFunds && sufficientBalance);
+
+    require(_duration >= _cliff);
+    require(_amount > 0);
+
+    // Assign the tokens to the beneficiary
+    address tokenVesting = new TokenVesting(
+      _beneficiary,
+      _start,
+      _cliff,
+      _duration,
+      _revocable
+    );
+    token.safeTransfer(tokenVesting, _amount);
+
+    if (!beneficiaryExists(_beneficiary)) {
+      beneficiaries.push(_beneficiary); // new beneficiary
+    }
+    beneficiaryDistributionContracts[_beneficiary].push(tokenVesting);
+
+    // Update our bookkeeping
+    distributedTokens.add(_amount);
+
+    return tokenVesting;
   }
 
   /**
@@ -132,7 +166,7 @@ contract TokenVestingPool is Ownable {
   }
 
   /**
-   * @notice
+   * @notice TODO
    * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
    * @return List of TokenVesting addresses.
    */
@@ -142,6 +176,11 @@ contract TokenVestingPool is Ownable {
     return beneficiaryDistributionContracts[_beneficiary];
   }
 
+  /**
+   * @notice TODO
+   * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
+   * @return true if beneficiary exists, false otherwise.
+   */
   function beneficiaryExists(
     address _beneficiary
   ) internal view returns (bool) {

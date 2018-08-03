@@ -33,15 +33,6 @@ contract('TokenTimelockPool', (accounts) => {
       assert(contract, 'TokenTimelockPool could not be instantiated');
     });
 
-    it('does not instantiate the contract when the caller is not the owner', async () => {
-      try {
-        await TokenTimelockPool.new(token.address, 1000, releaseDate, { from: accounts[1] });
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
-    });
-
     it('does not instantiate the contract when the token is not a valid address', async () => {
       try {
         await TokenTimelockPool.new('0x0', 1000, releaseDate, { from: owner });
@@ -100,17 +91,17 @@ contract('TokenTimelockPool', (accounts) => {
 
   describe('#addBeneficiary', () => {
     it('adds a beneficiary to the token pool', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount);
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
     });
 
     it('adds a beneficiary when the beneficiary already exists in the pool', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount);
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount);
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
     });
 
     it('does not add a beneficiary when the beneficiary is not a valid address', async () => {
       try {
-        await tokenTimelockPool.addBeneficiary('0x0', beneficiary1Amount);
+        await tokenTimelockPool.addBeneficiary('0x0', beneficiary1Amount, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -119,7 +110,7 @@ contract('TokenTimelockPool', (accounts) => {
 
     it('does not add a beneficiary when the beneficiary is the owner of the pool', async () => {
       try {
-        await tokenTimelockPool.addBeneficiary(owner, beneficiary1Amount);
+        await tokenTimelockPool.addBeneficiary(owner, beneficiary1Amount, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -128,7 +119,7 @@ contract('TokenTimelockPool', (accounts) => {
 
     it('does not add a beneficiary when amount of tokens is zero', async () => {
       try {
-        await tokenTimelockPool.addBeneficiary(beneficiary1, 0);
+        await tokenTimelockPool.addBeneficiary(beneficiary1, 0, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -137,7 +128,7 @@ contract('TokenTimelockPool', (accounts) => {
 
     it('does not add a beneficiary when amount of tokens is more than the pool balance', async () => {
       try {
-        await tokenTimelockPool.addBeneficiary(beneficiary1, totalFunds + 1);
+        await tokenTimelockPool.addBeneficiary(beneficiary1, totalFunds + 1, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);

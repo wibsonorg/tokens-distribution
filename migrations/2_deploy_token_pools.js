@@ -13,12 +13,12 @@ module.exports = (deployer, network) => {
 
   if (owner) {
     deployer
-      .deploy(TokenVestingPool, vesting.tokenAdress, vesting.totalFunds, {
+      .deploy(TokenVestingPool, vesting.tokenAddress, vesting.totalFunds, {
         from: owner,
       })
       .then(() => deployer.deploy(
         TokenTimelockPool,
-        timelock.tokenAdress,
+        timelock.tokenAddress,
         timelock.totalFunds,
         timelock.releaseDate,
         { from: owner },
