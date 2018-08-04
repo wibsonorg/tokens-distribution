@@ -316,18 +316,18 @@ contract('TokenVestingPool', (accounts) => {
       assert.equal(revokeTx.receipt.status, 1, 'Could not revoke vesting');
     });
 
-    it('revokes tokens even if another token vesting contract was added for the other beneficiary', async () => {
+    it('revokes tokens even if another token vesting contract was added for another beneficiary', async () => {
       await contract.addBeneficiary(
         beneficiary2, start, oneDay, oneWeek, true, 20,
         { from: owner },
       );
-      const contracts = await contract.getDistributionContracts(beneficiary1);
       await contract.addBeneficiary(
         beneficiary1, start, oneDay, oneWeek, true, 20,
         { from: owner },
       );
-      const revokeTx = await contract.revoke(beneficiary1, contracts[0], { from: owner });
-      assert.ok(revokeTx.status === '0x1', 'Could not revoke vesting');
+      const contracts = await contract.getDistributionContracts(beneficiary2);
+      const revokeTx = await contract.revoke(beneficiary2, contracts[0], { from: owner });
+      assert.equal(revokeTx.receipt.status, 1, 'Could not revoke vesting');
     });
 
     it('revokes tokens even if another token vesting contract was added for the same beneficiary', async () => {
