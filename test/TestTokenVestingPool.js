@@ -412,7 +412,7 @@ contract('TokenVestingPool', (accounts) => {
       // the first is released entirely (100 tokens)
       // the second releases one out of seven days (100 / 7 ~= 14 tokens)
       // the third releases one out of seven days (100 / 7 ~= 14 tokens)
-      assert.equal(Number(balanceAfter) - Number(balanceBefore), 128);
+      assert.ok((Number(balanceAfter) - Number(balanceBefore)) >= 128);
     });
   });
 });

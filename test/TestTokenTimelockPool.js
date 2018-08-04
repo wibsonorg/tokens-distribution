@@ -1,10 +1,12 @@
-const { assertRevert } = require('./utils/helpers');
+const { assertRevert, increaseTime } = require('./utils/helpers');
 
 const TokenTimelockPool = artifacts.require('./TokenTimelockPool.sol');
 const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
+const TokenTimelock = artifacts.require('TokenTimelock');
 
 contract('TokenTimelockPool', (accounts) => {
   const owner = accounts[0];
+  const oneDay = 86400;
   const releaseDate = Date.now() / 1000 + 60 * 60 * 24;
 
   const beneficiary1 = accounts[1];
@@ -158,6 +160,42 @@ contract('TokenTimelockPool', (accounts) => {
     it('does not return the distribution contracts if beneficiary is not a valid address', async () => {
       try {
         await tokenTimelockPool.getDistributionContracts('0x0');
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+  });
+
+  context('when multiple timelock contracts are added', () => {
+    beforeEach(async () => {
+      token = await Wibcoin.new({ from: owner });
+      tokenTimelockPool = await TokenTimelockPool.new(token.address, 1000, releaseDate, {
+        from: owner,
+      });
+      await token.transfer(tokenTimelockPool.address, totalFunds, { from: owner });
+
+      await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
+      await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
+      await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
+    });
+
+    it('transfers the corresponding tokens to the beneficiaries', async () => {
+      await increaseTime(oneDay * 2);
+
+      const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
+      const timelockContract0 = TokenTimelock.at(contracts[0]);
+      const timelockContract1 = TokenTimelock.at(contracts[1]);
+
+      const balanceBefore = await token.balanceOf.call(beneficiary1);
+      await timelockContract0.release();
+      await timelockContract1.release();
+      const balanceAfter = await token.balanceOf.call(beneficiary1);
+
+      assert.equal(Number(balanceAfter) - Number(balanceBefore), 200);
+
+      try {
+        await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
         assert.fail();
       } catch (error) {
         assertRevert(error);

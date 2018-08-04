@@ -87,6 +87,7 @@ contract TokenTimelockPool is Ownable {
   ) public onlyOwner validAddress(_beneficiary) returns (address) {
     require(_beneficiary != owner);
     require(_amount > 0);
+    require(block.timestamp < releaseDate);
 
     // Check there are sufficient funds and actual token balance.
     require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
