@@ -112,8 +112,8 @@ contract TokenTimelockPool is Ownable {
   }
 
   /**
-   * @notice TODO
-   * @param _beneficiary address of the beneficiary
+   * @notice Gets an array of all the distribution contracts for a given beneficiary.
+   * @param _beneficiary address of the beneficiary to whom tokens will be transferred.
    * @return List of TokenTimelock addresses.
    */
   function getDistributionContracts(
@@ -123,8 +123,8 @@ contract TokenTimelockPool is Ownable {
   }
 
   /**
-   * @notice TODO
-   * @param _beneficiary address of the beneficiary.
+   * @notice Checks if a beneficiary was added to the pool at least once.
+   * @param _beneficiary address of the beneficiary to whom tokens will be transferred.
    * @return true if beneficiary exists, false otherwise.
    */
   function beneficiaryExists(
