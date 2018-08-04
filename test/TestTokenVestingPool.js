@@ -431,10 +431,10 @@ contract('TokenVestingPool', (accounts) => {
       const vestingContract0 = TokenVesting.at(contracts[0]);
       const vestingContract1 = TokenVesting.at(contracts[1]);
 
-      const balanceBefore = await token.balanceOf(beneficiary1);
+      const balanceBefore = await token.balanceOf.call(beneficiary1);
       await vestingContract0.release(token.address);
       await vestingContract1.release(token.address);
-      const balanceAfter = await token.balanceOf(beneficiary1);
+      const balanceAfter = await token.balanceOf.call(beneficiary1);
 
       // the first is released entirely (100 tokens)
       // the second releases one out of seven days (100 / 7 ~= 14 tokens)
