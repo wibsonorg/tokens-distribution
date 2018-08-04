@@ -272,7 +272,7 @@ contract('TokenVestingPool', (accounts) => {
       }
     });
 
-    it('does not revoke the tokens of unexistent beneficiary', async () => {
+    it('does not revoke the tokens of nonexistent beneficiary', async () => {
       try {
         await contract.revoke(beneficiary1, fakeAddress, { from: owner });
         assert.fail();
@@ -281,7 +281,7 @@ contract('TokenVestingPool', (accounts) => {
       }
     });
 
-    it('does not revoke the tokens of unexistent vesting contract', async () => {
+    it('does not revoke the tokens of nonexistent vesting contract', async () => {
       await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, true, 20, {
         from: owner,
       });
@@ -311,7 +311,7 @@ contract('TokenVestingPool', (accounts) => {
       }
     });
 
-    it('does not revoke the unrevocable tokens', async () => {
+    it('does not revoke the irrevocable tokens', async () => {
       await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, false, 20, {
         from: owner,
       });
