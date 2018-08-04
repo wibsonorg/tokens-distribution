@@ -436,7 +436,10 @@ contract('TokenVestingPool', (accounts) => {
       await vestingContract1.release(token.address);
       const balanceAfter = await token.balanceOf(beneficiary1);
 
-      assert.equal(balanceAfter.toNumber() - balanceBefore.toNumber(), 100);
+      // the first is released entirely (100 tokens)
+      // the second releases one out of seven days (100 / 7 ~= 14 tokens)
+      // the third releases one out of seven days (100 / 7 ~= 14 tokens)
+      assert.equal(Number(balanceAfter) - Number(balanceBefore), 128);
     });
   });
 });
