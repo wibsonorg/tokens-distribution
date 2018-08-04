@@ -18,7 +18,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * @dev There is only one method to add a beneficiary. By doing this, not only
  * both modes (lock-up and vesting) can be achieved, but they can also be combined
  * as suitable. Moreover, total funds and distributed tokens are controlled to
- * avoid refills done by transfering tokens through the ERC20.
+ * avoid refills done by transferring tokens through the ERC20.
  */
 contract TokenVestingPool is Ownable {
   using SafeERC20 for ERC20Basic;

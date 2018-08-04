@@ -17,7 +17,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * they are assigned. In which case, the new beneficiary will be able to release
  * them immediately.
  * @dev Total funds and distributed tokens are controlled to avoid refills done
- * by transfering tokens through the ERC20.
+ * by transferring tokens through the ERC20.
  */
 contract TokenTimelockPool is Ownable {
   using SafeERC20 for ERC20Basic;
@@ -82,7 +82,7 @@ contract TokenTimelockPool is Ownable {
    * @param _beneficiary Beneficiary that will receive the tokens after the
    * release date.
    * @param _amount of tokens to be released.
-   * @return address for the new TokenVesting contract instance.
+   * @return address for the new TokenTimelock contract instance.
    */
   function addBeneficiary(
     address _beneficiary,
