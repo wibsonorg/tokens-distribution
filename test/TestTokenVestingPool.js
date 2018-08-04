@@ -296,7 +296,7 @@ contract('TokenVestingPool', (accounts) => {
         beneficiary1, start, oneDay, oneWeek, false, 20,
         { from: owner },
       );
-      const contracts = await contract.getDistributionContracts(beneficiary1, 0, 0);
+      const contracts = await contract.getDistributionContracts(beneficiary1);
 
       try {
         await contract.revoke(beneficiary1, contracts[0], { from: owner });
