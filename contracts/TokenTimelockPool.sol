@@ -59,6 +59,7 @@ contract TokenTimelockPool is Ownable {
     uint256 _releaseDate
   ) public validAddress(_token) {
     require(_totalFunds > 0);
+    // solium-disable-next-line security/no-block-members
     require(_releaseDate > block.timestamp);
 
     token = _token;
@@ -87,6 +88,7 @@ contract TokenTimelockPool is Ownable {
   ) public onlyOwner validAddress(_beneficiary) returns (address) {
     require(_beneficiary != owner);
     require(_amount > 0);
+    // solium-disable-next-line security/no-block-members
     require(block.timestamp < releaseDate);
 
     // Check there are sufficient funds and actual token balance.
