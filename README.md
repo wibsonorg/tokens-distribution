@@ -1,7 +1,7 @@
 # Wibson Tokens Distribution
 
 ## Getting Started
-In order to deploy to any environment, the `deploy.json` file must be set up.
+In order to **deploy** to any environment, the `deploy.json` file must be set up.
 
 You can start by copying the `deploy.example.json` file, renaming it and editing it as suitable.
 
