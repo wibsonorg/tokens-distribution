@@ -49,12 +49,10 @@ contract TokenVestingPool is Ownable {
   }
 
   /**
-   * @notice Contract constructor. It creates an instance of TokenVestingPool bounded
-   * to a specific ERC20 token and a total amount of funds to be given to future
-   * beneficiaries.
-   * @param _token instance of an ERC20 token (e.g.: Wibcoin)
-   * @param _totalFunds amount of tokens the contract is allowed to spend
-   *        in beneficiaries.
+   * @notice Contract constructor.
+   * @param _token instance of an ERC20 token.
+   * @param _totalFunds Maximum amount of tokens to be distributed among
+   *        beneficiaries.
    */
   constructor(
     ERC20Basic _token,
@@ -111,15 +109,14 @@ contract TokenVestingPool is Ownable {
     uint256 _duration,
     bool _revocable,
     uint256 _amount
-  ) public validAddress(_beneficiary) onlyOwner returns (address) {
+  ) public onlyOwner validAddress(_beneficiary) returns (address) {
     require(_beneficiary != owner);
+    require(_amount > 0);
+    require(_duration >= _cliff);
 
     // Check there are sufficient funds and actual token balance.
     require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
     require(token.balanceOf(address(this)) >= _amount);
-
-    require(_duration >= _cliff);
-    require(_amount > 0);
 
     // Assign the tokens to the beneficiary
     address tokenVesting = new TokenVesting(
@@ -132,13 +129,13 @@ contract TokenVestingPool is Ownable {
     token.safeTransfer(tokenVesting, _amount);
 
     if (!beneficiaryExists(_beneficiary)) {
-      beneficiaries.push(_beneficiary); // new beneficiary
+      beneficiaries.push(_beneficiary);
     }
-    beneficiaryDistributionContracts[_beneficiary].push(tokenVesting);
-    distributionContracts[tokenVesting] = true;
 
-    // Update our bookkeeping
+    // Bookkeeping
+    beneficiaryDistributionContracts[_beneficiary].push(tokenVesting);
     distributedTokens.add(_amount);
+    distributionContracts[tokenVesting] = true;
 
     return tokenVesting;
   }
@@ -168,7 +165,7 @@ contract TokenVestingPool is Ownable {
 
   /**
    * @notice Gets an array of all the distribution contracts for a given beneficiary.
-   * @param _beneficiary address of the beneficiary to whom vested tokens are transferred.
+   * @param _beneficiary address of the beneficiary to whom tokens will be transferred.
    * @return List of TokenVesting addresses.
    */
   function getDistributionContracts(
@@ -179,7 +176,7 @@ contract TokenVestingPool is Ownable {
 
   /**
    * @notice Checks if a beneficiary was added to the pool at least once.
-   * @param _beneficiary address of the beneficiary to whom vested tokens are transferred.
+   * @param _beneficiary address of the beneficiary to whom tokens will be transferred.
    * @return true if beneficiary exists, false otherwise.
    */
   function beneficiaryExists(

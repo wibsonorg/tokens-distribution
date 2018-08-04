@@ -35,22 +35,23 @@ contract TokenTimelockPool is Ownable {
   // Tokens already distributed
   uint256 public distributedTokens;
 
-  // List of tokens beneficiaries
+  // List of beneficiaries added to the pool
   address[] public beneficiaries;
 
   // Mapping of beneficiary to TokenTimelock contracts addresses
   mapping(address => address[]) public beneficiaryDistributionContracts;
 
-  modifier validAddress(address addr) {
-    require(addr != address(0));
-    require(addr != address(this));
+  modifier validAddress(address _addr) {
+    require(_addr != address(0));
+    require(_addr != address(this));
     _;
   }
 
   /**
    * @notice Contract constructor.
-   * @param _token instance of an ERC20 token (e.g.: Wibcoin).
-   * @param _totalFunds Maximum amount of tokens to be distributed.
+   * @param _token instance of an ERC20 token.
+   * @param _totalFunds Maximum amount of tokens to be distributed among
+   *        beneficiaries.
    * @param _releaseDate Timestamp (in seconds) when tokens can be released.
    */
   constructor(
@@ -64,6 +65,7 @@ contract TokenTimelockPool is Ownable {
 
     token = _token;
     totalFunds = _totalFunds;
+    distributedTokens = 0;
     releaseDate = _releaseDate;
   }
 
@@ -95,7 +97,7 @@ contract TokenTimelockPool is Ownable {
     require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
     require(token.balanceOf(address(this)) >= _amount);
 
-    // We assign the tokens to the beneficiary
+    // Assign the tokens to the beneficiary
     address tokenTimelock = new TokenTimelock(
       token,
       _beneficiary,
@@ -103,13 +105,13 @@ contract TokenTimelockPool is Ownable {
     );
     token.safeTransfer(tokenTimelock, _amount);
 
-    // We update our bookkeeping
-    distributedTokens.add(_amount);
-
     if (!beneficiaryExists(_beneficiary)) {
-      beneficiaries.push(_beneficiary); // new beneficiary
+      beneficiaries.push(_beneficiary);
     }
+
+    // Bookkeeping
     beneficiaryDistributionContracts[_beneficiary].push(tokenTimelock);
+    distributedTokens.add(_amount);
 
     return tokenTimelock;
   }
