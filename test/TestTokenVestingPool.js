@@ -241,6 +241,7 @@ contract('TokenVestingPool', (accounts) => {
 
     beforeEach(async () => {
       contract = await TokenVestingPool.new(token.address, 100, { from: owner });
+      await token.transfer(contract.address, 100);
     });
 
     it('does not revoke the tokens of an invalid beneficiary address', async () => {
