@@ -1,35 +1,8 @@
-const { assertRevert } = require('./utils/helpers');
+const { assertRevert, increaseTime } = require('./utils/helpers');
 
 const TokenVestingPool = artifacts.require('./TokenVestingPool.sol');
 const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
 const TokenVesting = artifacts.require('TokenVesting');
-
-const rpc = (method, arg) => {
-  const id = Date.now();
-  const req = {
-    jsonrpc: '2.0',
-    method,
-    id,
-  };
-  if (arg) req.params = arg;
-
-  return new Promise((resolve, reject) => {
-    web3.currentProvider.sendAsync(req, (err1) => { // eslint-disable-line consistent-return
-      if (err1) return reject(err1);
-
-      web3.currentProvider.sendAsync(
-        {
-          jsonrpc: '2.0',
-          method: 'evm_mine',
-          id: id + 1,
-        },
-        (err2, res) => (err2 ? reject(err2) : resolve(res)),
-      );
-    });
-  });
-};
-
-const evmIncreaseTime = time => rpc('evm_increaseTime', [time]);
 
 contract('TokenVestingPool', (accounts) => {
   const owner = accounts[0];
@@ -425,7 +398,7 @@ contract('TokenVestingPool', (accounts) => {
     });
 
     it('transfers the corresponding tokens to the beneficiaries', async () => {
-      await evmIncreaseTime(oneDay * 2);
+      await increaseTime(oneDay * 2);
 
       const contracts = await contract.getDistributionContracts(beneficiary1);
       const vestingContract0 = TokenVesting.at(contracts[0]);
