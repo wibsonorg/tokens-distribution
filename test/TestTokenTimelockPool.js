@@ -22,6 +22,7 @@ contract('TokenTimelockPool', (accounts) => {
     tokenTimelockPool = await TokenTimelockPool.new(token.address, totalFunds, releaseDate, {
       from: owner,
     });
+    await token.transfer(tokenTimelockPool.address, totalFunds, { from: owner });
   });
 
 
@@ -42,18 +43,9 @@ contract('TokenTimelockPool', (accounts) => {
       }
     });
 
-    it('does not instantiate the contract when the allowed spending is zero', async () => {
+    it('does not instantiate the contract when the total funds are zero', async () => {
       try {
         await TokenTimelockPool.new(token.address, 0, releaseDate, { from: owner });
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
-    });
-
-    it('does not instantiate the contract when the allowed spending is less than zero', async () => {
-      try {
-        await TokenTimelockPool.new(token, -1, releaseDate, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
