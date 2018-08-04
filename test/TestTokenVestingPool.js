@@ -5,27 +5,30 @@ const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
 const TokenVesting = artifacts.require('TokenVesting');
 
 const rpc = (method, arg) => {
-  const req = { jsonrpc: '2.0', method, id: new Date().getTime() };
+  const id = Date.now();
+  const req = {
+    jsonrpc: '2.0',
+    method,
+    id,
+  };
   if (arg) req.params = arg;
 
   return new Promise((resolve, reject) => {
-    web3.currentProvider.sendAsync(req, (err, result) => {
-      if (err) return reject(err);
-      if (result && result.error) {
-        const msg = `RPC Error: ${result.error.message || result.error}`;
-        return reject(new Error(msg));
-      }
-      return resolve(result);
+    web3.currentProvider.sendAsync(req, (err1) => { // eslint-disable-line consistent-return
+      if (err1) return reject(err1);
+
+      web3.currentProvider.sendAsync(
+        {
+          jsonrpc: '2.0',
+          method: 'evm_mine',
+          id: id + 1,
+        },
+        (err2, res) => (err2 ? reject(err2) : resolve(res)),
+      );
     });
   });
 };
 
-const evmSnapshot = async () => {
-  const { result } = await rpc('evm_snapshot');
-  return result;
-};
-
-const evmRevert = id => rpc('evm_revert', [id]);
 const evmIncreaseTime = time => rpc('evm_increaseTime', [time]);
 
 contract('TokenVestingPool', (accounts) => {
@@ -66,7 +69,7 @@ contract('TokenVestingPool', (accounts) => {
 
     it('creates an instance of the contract', async () => {
       const contract = await TokenVestingPool.new(token.address, 1000, { from: owner });
-      assert.ok(contract !== null);
+      assert.ok(contract);
     });
   });
 
@@ -163,7 +166,7 @@ contract('TokenVestingPool', (accounts) => {
         from: owner,
       });
 
-      assert.ok(status === '0x1', 'Could not add beneficiary');
+      assert.equal(status, 1, 'Could not add beneficiary');
     });
 
     it('adds a beneficiary even if the start date precedes the invocation of this method', async () => {
@@ -173,7 +176,7 @@ contract('TokenVestingPool', (accounts) => {
         from: owner,
       });
 
-      assert.ok(status === '0x1', 'Could not add beneficiary');
+      assert.equal(status, 1, 'Could not add beneficiary');
     });
 
     it('adds another token vesting contract when the beneficiary exists in the pool', async () => {
@@ -186,7 +189,7 @@ contract('TokenVestingPool', (accounts) => {
         from: owner,
       });
 
-      assert.ok(status === '0x1', 'Could not add vesting contract');
+      assert.equal(status, 1, 'Could not add vesting contract');
     });
 
     it('adds a beneficiary to the token pool with revocable tokens', async () => {
@@ -196,7 +199,7 @@ contract('TokenVestingPool', (accounts) => {
         from: owner,
       });
 
-      assert.ok(status === '0x1', 'Could not add beneficiary');
+      assert.equal(status, 1, 'Could not add beneficiary');
     });
 
     it('adds a beneficiary even if another token vesting contract was revoked for the same beneficiary', async () => {
@@ -217,8 +220,8 @@ contract('TokenVestingPool', (accounts) => {
         { from: owner },
       );
 
-      assert.ok(revokeTx.status === '0x1', 'Could not revoke vesting');
-      assert.ok(addTx.status === '0x1', 'Could not add beneficiary');
+      assert.equal(revokeTx.status, 1, 'Could not revoke vesting');
+      assert.equal(addTx.status, 1, 'Could not add beneficiary');
     });
 
     it('adds a beneficiary even if another token vesting contract was revoked for the other beneficiary', async () => {
@@ -239,8 +242,8 @@ contract('TokenVestingPool', (accounts) => {
         { from: owner },
       );
 
-      assert.ok(revokeTx.status === '0x1', 'Could not revoke vesting');
-      assert.ok(addTx.status === '0x1', 'Could not add beneficiary');
+      assert.equal(revokeTx.status, 1, 'Could not revoke vesting');
+      assert.equal(addTx.status, 1, 'Could not add beneficiary');
     });
   });
 
@@ -379,7 +382,7 @@ contract('TokenVestingPool', (accounts) => {
         from: owner,
       });
       const revokeTx = await contract.revoke(beneficiary1, contracts[0], { from: owner });
-      assert.ok(revokeTx.receipt.status, 1, 'Could not revoke vesting');
+      assert.equal(revokeTx.receipt.status, 1, 'Could not revoke vesting');
     });
 
     it('revokes tokens even if another token vesting contract was revoked for the other beneficiary', async () => {
@@ -411,19 +414,15 @@ contract('TokenVestingPool', (accounts) => {
   });
 
   context('when multiple vesting contracts are added', () => {
-    let snapshotId;
     let contract;
 
     beforeEach(async () => {
-      snapshotId = await evmSnapshot();
       contract = await TokenVestingPool.new(token.address, 1000, { from: owner });
       await token.transfer(contract.address, 1000);
       await contract.addBeneficiary(beneficiary1, start, oneDay, oneDay, false, 100);
       await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, true, 100);
       await contract.addBeneficiary(beneficiary2, start, oneDay, oneWeek, false, 100);
     });
-
-    afterEach(() => evmRevert(snapshotId));
 
     it('transfers the corresponding tokens to the beneficiaries', async () => {
       await evmIncreaseTime(oneDay * 2);
