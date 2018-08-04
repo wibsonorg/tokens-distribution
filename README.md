@@ -46,12 +46,12 @@ npm run truffle -- console --network staging # To test within the console
 | Contract          | Address |
 | ----------------- | ------- |
 | Migrations        | `0x`    |
-| TokenVestingPool  | `0x     |
-| TokenTimelockPool | `0x     |
+| TokenVestingPool  | `0x`    |
+| TokenTimelockPool | `0x`    |
 
 ### Mainnet
 | Contract          | Address |
 | ----------------- | ------- |
 | Migrations        | `0x`    |
-| TokenVestingPool  | `0x     |
-| TokenTimelockPool | `0x     |
+| TokenVestingPool  | `0x`    |
+| TokenTimelockPool | `0x`    |
