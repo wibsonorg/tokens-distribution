@@ -42,15 +42,6 @@ contract('TokenTimelockPool', (accounts) => {
       }
     });
 
-    it('does not instantiate the contract when the token is not an ERC20 token', async () => {
-      try {
-        await TokenTimelockPool.new(accounts[1], 1000, releaseDate, { from: owner });
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
-    });
-
     it('does not instantiate the contract when the allowed spending is zero', async () => {
       try {
         await TokenTimelockPool.new(token.address, 0, releaseDate, { from: owner });

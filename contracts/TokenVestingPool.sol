@@ -5,6 +5,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+
 /**
  * @title TokenVestingPool
  * @author Wibson Development Team <developers@wibson.org>
@@ -114,9 +115,8 @@ contract TokenVestingPool is Ownable {
     require(_beneficiary != owner);
 
     // Check there are sufficient funds and actual token balance.
-    bool sufficientFunds = (totalFunds - distributedTokens) >= _amount;
-    bool sufficientBalance = token.balanceOf(address(this)) >= _amount;
-    require(sufficientFunds && sufficientBalance);
+    require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
+    require(token.balanceOf(address(this)) >= _amount);
 
     require(_duration >= _cliff);
     require(_amount > 0);
@@ -135,6 +135,7 @@ contract TokenVestingPool is Ownable {
       beneficiaries.push(_beneficiary); // new beneficiary
     }
     beneficiaryDistributionContracts[_beneficiary].push(tokenVesting);
+    distributionContracts[tokenVesting] = true;
 
     // Update our bookkeeping
     distributedTokens.add(_amount);
