@@ -111,6 +111,22 @@ contract TokenTimelockPool is Ownable {
     return tokenTimelock;
   }
 
+  /**
+   * @notice TODO
+   * @param _beneficiary address of the beneficiary
+   * @return List of TokenTimelock addresses.
+   */
+  function getDistributionContracts(
+    address _beneficiary
+  ) public view validAddress(_beneficiary) returns (address[]) {
+    return beneficiaryDistributionContracts[_beneficiary];
+  }
+
+  /**
+   * @notice TODO
+   * @param _beneficiary address of the beneficiary.
+   * @return true if beneficiary exists, false otherwise.
+   */
   function beneficiaryExists(
     address _beneficiary
   ) internal view returns (bool) {
