@@ -341,7 +341,7 @@ contract('TokenVestingPool', (accounts) => {
         { from: owner },
       );
       const revokeTx = await contract.revoke(beneficiary1, contracts[0], { from: owner });
-      assert.ok(revokeTx.status === '0x1', 'Could not revoke vesting');
+      assert.ok(revokeTx.receipt.status, 1, 'Could not revoke vesting');
     });
 
     it('revokes tokens even if another token vesting contract was revoked for the other beneficiary', async () => {
