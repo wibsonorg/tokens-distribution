@@ -417,6 +417,7 @@ contract('TokenVestingPool', (accounts) => {
     beforeEach(async () => {
       snapshotId = await evmSnapshot();
       contract = await TokenVestingPool.new(token.address, 1000, { from: owner });
+      await token.transfer(contract.address, 1000);
       await contract.addBeneficiary(beneficiary1, start, oneDay, oneDay, false, 100);
       await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, true, 100);
       await contract.addBeneficiary(beneficiary2, start, oneDay, oneWeek, false, 100);
@@ -432,11 +433,11 @@ contract('TokenVestingPool', (accounts) => {
       const vestingContract1 = TokenVesting.at(contracts[1]);
 
       const balanceBefore = await token.balanceOf(beneficiary1);
-      await vestingContract0.release(token);
-      await vestingContract1.release(token);
+      await vestingContract0.release(token.address);
+      await vestingContract1.release(token.address);
       const balanceAfter = await token.balanceOf(beneficiary1);
 
-      assert.equal(balanceAfter - balanceBefore, 100);
+      assert.equal(balanceAfter.toNumber() - balanceBefore.toNumber(), 100);
     });
   });
 });
