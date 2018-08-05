@@ -3,6 +3,7 @@ pragma solidity ^0.4.24;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 /**
@@ -16,10 +17,12 @@ import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
  * tokens would be refunded to the pool (not the contract owner).
  * @dev There is only one method to add a beneficiary. By doing this, not only
  * both modes (lock-up and vesting) can be achieved, but they can also be combined
- * as suitable.
+ * as suitable. Moreover, total funds and distributed tokens are controlled to
+ * avoid refills done by transferring tokens through the ERC20.
  */
 contract TokenVestingPool is Ownable {
   using SafeERC20 for ERC20Basic;
+  using SafeMath for uint256;
 
   // ERC20 token being held
   ERC20Basic token;
@@ -36,6 +39,9 @@ contract TokenVestingPool is Ownable {
   // Mapping of beneficiary to TokenVesting contracts addresses
   mapping(address => address[]) public beneficiaryDistributionContracts;
 
+  // Tracks the distribution contracts created by this contract.
+  mapping(address => bool) private distributionContracts;
+
   modifier validAddress(address _addr) {
     require(_addr != address(0));
     require(_addr != address(this));
@@ -43,19 +49,20 @@ contract TokenVestingPool is Ownable {
   }
 
   /**
-   * @notice Contract constructor. It creates an instance of TokenVestingPool bounded
-   * to a specific ERC20 token and a total amount of funds to be given to future
-   * beneficiaries.
-   * @param _token instance of an ERC20 token (e.g.: Wibcoin)
-   * @param _totalFunds amount of tokens the contract is allowed to spend
-   *        in beneficiaries.
+   * @notice Contract constructor.
+   * @param _token instance of an ERC20 token.
+   * @param _totalFunds Maximum amount of tokens to be distributed among
+   *        beneficiaries.
    */
   constructor(
     ERC20Basic _token,
     uint256 _totalFunds
-  ) public {
+  ) public validAddress(_token) {
+    require(_totalFunds > 0);
+
     token = _token;
     totalFunds = _totalFunds;
+    distributedTokens = 0;
   }
 
   /**
@@ -102,7 +109,35 @@ contract TokenVestingPool is Ownable {
     uint256 _duration,
     bool _revocable,
     uint256 _amount
-  ) public onlyOwner returns (address) {
+  ) public onlyOwner validAddress(_beneficiary) returns (address) {
+    require(_beneficiary != owner);
+    require(_amount > 0);
+    require(_duration >= _cliff);
+
+    // Check there are sufficient funds and actual token balance.
+    require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
+    require(token.balanceOf(address(this)) >= _amount);
+
+    // Assign the tokens to the beneficiary
+    address tokenVesting = new TokenVesting(
+      _beneficiary,
+      _start,
+      _cliff,
+      _duration,
+      _revocable
+    );
+    token.safeTransfer(tokenVesting, _amount);
+
+    if (!beneficiaryExists(_beneficiary)) {
+      beneficiaries.push(_beneficiary);
+    }
+
+    // Bookkeeping
+    beneficiaryDistributionContracts[_beneficiary].push(tokenVesting);
+    distributedTokens.add(_amount);
+    distributionContracts[tokenVesting] = true;
+
+    return tokenVesting;
   }
 
   /**
@@ -110,24 +145,43 @@ contract TokenVestingPool is Ownable {
    *         to the TokenVestingPool contract.
    * @dev The `msg.sender` must be the owner of the contract.
    * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
-   * @param _tokenVestingContract address of the TokenVesting contract used to
+   * @param _tokenVesting address of the TokenVesting contract used to
    *        release tokens to the beneficiary
    * @return true if the tokens were revoked successfully, reverts otherwise.
    */
   function revoke(
     address _beneficiary,
-    address _tokenVestingContract
-  ) public onlyOwner returns (bool) {
+    address _tokenVesting
+  ) public onlyOwner validAddress(_beneficiary) validAddress(_tokenVesting)
+  returns (bool) {
+    TokenVesting tv = TokenVesting(_tokenVesting);
+    require(beneficiaryExists(_beneficiary));
+    require(distributionContracts[_tokenVesting]);
+    require(tv.beneficiary() == _beneficiary);
+
+    tv.revoke(token);
+    return true;
   }
 
   /**
-   * @notice
-   * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
+   * @notice Gets an array of all the distribution contracts for a given beneficiary.
+   * @param _beneficiary address of the beneficiary to whom tokens will be transferred.
    * @return List of TokenVesting addresses.
    */
   function getDistributionContracts(
     address _beneficiary
   ) public view validAddress(_beneficiary) returns (address[]) {
     return beneficiaryDistributionContracts[_beneficiary];
+  }
+
+  /**
+   * @notice Checks if a beneficiary was added to the pool at least once.
+   * @param _beneficiary address of the beneficiary to whom tokens will be transferred.
+   * @return true if beneficiary exists, false otherwise.
+   */
+  function beneficiaryExists(
+    address _beneficiary
+  ) internal view returns (bool) {
+    return beneficiaryDistributionContracts[_beneficiary].length > 0;
   }
 }
