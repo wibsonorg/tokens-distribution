@@ -144,6 +144,17 @@ contract('TokenTimelockPool', (accounts) => {
         assertRevert(error);
       }
     });
+
+    it('does not add a beneficiary after the release date', async () => {
+      await increaseTime(oneDay * 5);
+
+      try {
+        await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
   });
 
   describe('#getDistributionContracts', () => {
@@ -173,29 +184,8 @@ contract('TokenTimelockPool', (accounts) => {
     });
   });
 
-  it('transfers the corresponding tokens to the beneficiaries', async () => {
-    await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
-    await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
-    await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
-
-    await increaseTime(oneDay * 5);
-
-    const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
-    const timelockContract0 = TokenTimelock.at(contracts[0]);
-    const timelockContract1 = TokenTimelock.at(contracts[1]);
-
-    const balanceBefore = await token.balanceOf.call(beneficiary1);
-    await timelockContract0.release();
-    await timelockContract1.release();
-    const balanceAfter = await token.balanceOf.call(beneficiary1);
-
-    assert.equal(Number(balanceAfter) - Number(balanceBefore), 200);
-
-    try {
-      await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
-      assert.fail();
-    } catch (error) {
-      assertRevert(error);
-    }
+  describe('Integration Test', () => {
+//     it('', async () => {
+//     });
   });
 });
