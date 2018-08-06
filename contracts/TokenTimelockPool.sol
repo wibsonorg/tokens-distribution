@@ -111,7 +111,7 @@ contract TokenTimelockPool is Ownable {
 
     // Bookkeeping
     beneficiaryDistributionContracts[_beneficiary].push(tokenTimelock);
-    distributedTokens.add(_amount);
+    distributedTokens = distributedTokens.add(_amount);
 
     return tokenTimelock;
   }

@@ -134,7 +134,7 @@ contract TokenVestingPool is Ownable {
 
     // Bookkeeping
     beneficiaryDistributionContracts[_beneficiary].push(tokenVesting);
-    distributedTokens.add(_amount);
+    distributedTokens = distributedTokens.add(_amount);
     distributionContracts[tokenVesting] = true;
 
     return tokenVesting;
