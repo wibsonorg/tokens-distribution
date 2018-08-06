@@ -430,7 +430,7 @@ contract('TokenVestingPool', (accounts) => {
     });
   });
 
-  context('integrtion testing', () => {
+  context('Integration Test', () => {
     let contract;
 
     beforeEach(async () => {
