@@ -32,6 +32,7 @@
     "truffle-hdwallet-provider": "0.0.6"
   },
   "dependencies": {
+    "bignumber.js": "^7.2.1",
     "openzeppelin-solidity": "^1.11.0"
   }
 }
