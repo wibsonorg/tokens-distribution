@@ -430,7 +430,7 @@ contract('TokenVestingPool', (accounts) => {
     });
   });
 
-  context('when multiple vesting contracts are added', () => {
+  context('integrtion testing', () => {
     let contract;
 
     beforeEach(async () => {
@@ -456,7 +456,7 @@ contract('TokenVestingPool', (accounts) => {
       // the first is released entirely ('1e+11' tokens)
       // the second releases one out of seven days ('1e+11' / 7 ~= 14 tokens)
       // the third releases one out of seven days ('1e+11' / 7 ~= 14 tokens)
-      assert.ok(Number(balanceAfter) - Number(balanceBefore) >= 128);
+      assert.ok(balanceAfter.minus(balanceBefore).greaterThan(BigNumber('1.28e+11')));
     });
 
 
