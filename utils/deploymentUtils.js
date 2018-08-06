@@ -23,7 +23,8 @@ exports.getProvider = function getProvider(network, environment) {
   const config = getConfig();
   const envConfig = getEnvironmentConfig(environment);
   const infura = `https://${network}.infura.io/v3/${config.infuraToken}`;
-  return new HDWalletProvider(envConfig.mnemonic, infura);
+  const accountIndex = envConfig.ownerAccountIndex || 0;
+  return new HDWalletProvider(envConfig.mnemonic, infura, accountIndex);
 };
 
 exports.getEnvironmentAccounts = function getEnvironmentAccounts(environment) {
