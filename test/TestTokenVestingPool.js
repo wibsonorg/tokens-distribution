@@ -1,4 +1,6 @@
-const { assertRevert, increaseTime } = require('./utils/helpers');
+const {
+  assertRevert, increaseTime, snapshot, revert,
+} = require('./utils/helpers');
 
 const TokenVestingPool = artifacts.require('./TokenVestingPool.sol');
 const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
@@ -11,9 +13,11 @@ contract('TokenVestingPool', (accounts) => {
   const zeroAddress = '0x0000000000000000000000000000000000000000';
   const fakeAddress = '0x0123123123123123123123123123123123123123';
 
-  const start = Date.now() / 1000;
+  const start = Math.floor(Date.now() / 1000);
+  const oneHour = 3600;
   const oneDay = 86400;
   const oneWeek = oneDay * 7;
+  const oneMonth = oneDay * 30;
 
   let token;
 
@@ -388,16 +392,22 @@ contract('TokenVestingPool', (accounts) => {
 
   context('when multiple vesting contracts are added', () => {
     let contract;
+    let snapshotId;
 
     beforeEach(async () => {
       contract = await TokenVestingPool.new(token.address, 1000, { from: owner });
       await token.transfer(contract.address, 1000);
-      await contract.addBeneficiary(beneficiary1, start, oneDay, oneDay, false, 100);
-      await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, true, 100);
-      await contract.addBeneficiary(beneficiary2, start, oneDay, oneWeek, false, 100);
+      snapshotId = await snapshot();
+    });
+
+    afterEach(async () => {
+      await revert(snapshotId);
     });
 
     it('transfers the corresponding tokens to the beneficiaries', async () => {
+      await contract.addBeneficiary(beneficiary1, start, oneDay, oneDay, false, 100);
+      await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, true, 100);
+
       await increaseTime(oneDay * 2);
 
       const contracts = await contract.getDistributionContracts(beneficiary1);
@@ -413,6 +423,68 @@ contract('TokenVestingPool', (accounts) => {
       // the second releases one out of seven days (100 / 7 ~= 14 tokens)
       // the third releases one out of seven days (100 / 7 ~= 14 tokens)
       assert.ok((Number(balanceAfter) - Number(balanceBefore)) >= 128);
+    });
+
+
+    it.only('transfers the corresponding tokens to the beneficiaries', async () => {
+      await contract.addBeneficiary(beneficiary1, start, oneWeek, oneWeek, false, 10);
+      await contract.addBeneficiary(beneficiary1, start, oneMonth, oneMonth, false, 30);
+      await contract.addBeneficiary(beneficiary1, start, oneMonth * 3, oneMonth * 3, false, 60);
+
+      const contracts = await contract.getDistributionContracts(beneficiary1);
+
+      // 1 week
+      let tokenVesting = TokenVesting.at(contracts[0]);
+      // Travel to an hour before the cliff period ends.
+      await increaseTime(oneWeek - oneHour);
+
+      try {
+        await tokenVesting.release(token.address);
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+
+      // Travel to the exact moment when the cliff ends.
+      await increaseTime(oneHour);
+      const balanceBefore = await token.balanceOf.call(beneficiary1);
+      await tokenVesting.release(token.address);
+      let balanceAfterCliff = await token.balanceOf.call(beneficiary1);
+      assert.equal((Number(balanceAfterCliff) - Number(balanceBefore)), 10);
+
+      // 1 month
+      tokenVesting = TokenVesting.at(contracts[1]);
+      // Travel to an hour before the cliff period ends.
+      await increaseTime(oneMonth - oneWeek - oneHour);
+
+      try {
+        await tokenVesting.release(token.address);
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+
+      await increaseTime(oneHour);
+      await tokenVesting.release(token.address);
+      balanceAfterCliff = await token.balanceOf.call(beneficiary1);
+      assert.equal((Number(balanceAfterCliff) - Number(balanceBefore)), 40);
+
+      // 3 months
+      tokenVesting = TokenVesting.at(contracts[2]);
+      // Travel to an hour before the cliff period ends.
+      await increaseTime(oneMonth * 2 - oneHour);
+
+      try {
+        await tokenVesting.release(token.address);
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+
+      await increaseTime(oneHour);
+      await tokenVesting.release(token.address);
+      balanceAfterCliff = await token.balanceOf.call(beneficiary1);
+      assert.equal((Number(balanceAfterCliff) - Number(balanceBefore)), 100);
     });
   });
 });
