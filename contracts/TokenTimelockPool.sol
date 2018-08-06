@@ -24,7 +24,7 @@ contract TokenTimelockPool is Ownable {
   using SafeMath for uint256;
 
   // ERC20 token being held
-  ERC20Basic token;
+  ERC20Basic public token;
 
   // Timestamp (in seconds) when tokens can be released
   uint256 public releaseDate;

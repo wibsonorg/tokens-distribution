@@ -25,7 +25,7 @@ contract TokenVestingPool is Ownable {
   using SafeMath for uint256;
 
   // ERC20 token being held
-  ERC20Basic token;
+  ERC20Basic public token;
 
   // Maximum amount of tokens to be distributed
   uint256 public totalFunds;
