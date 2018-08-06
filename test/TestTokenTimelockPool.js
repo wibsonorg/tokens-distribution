@@ -1,14 +1,14 @@
-const { assertRevert, increaseTime } = require('./utils/helpers');
+const {
+  assertRevert, increaseTime, now, advanceBlock,
+} = require('./utils/helpers');
 
 const TokenTimelockPool = artifacts.require('./TokenTimelockPool.sol');
 const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
 const TokenTimelock = artifacts.require('TokenTimelock');
 
 contract('TokenTimelockPool', (accounts) => {
-  const owner = accounts[0];
   const oneDay = 86400;
-  const releaseDate = Date.now() / 1000 + 60 * 60 * 24;
-
+  const owner = accounts[0];
   const beneficiary1 = accounts[1];
   const beneficiary1Amount = 1000;
   const beneficiary2 = accounts[2];
@@ -17,7 +17,13 @@ contract('TokenTimelockPool', (accounts) => {
 
   let token;
   let tokenTimelockPool;
+  let releaseDate;
+  before(async () => {
+    await advanceBlock();
+  });
+
   beforeEach(async () => {
+    releaseDate = now() + oneDay;
     token = await Wibcoin.new({ from: owner });
     tokenTimelockPool = await TokenTimelockPool.new(token.address, totalFunds, releaseDate, {
       from: owner,
@@ -167,39 +173,29 @@ contract('TokenTimelockPool', (accounts) => {
     });
   });
 
-  context('when multiple timelock contracts are added', () => {
-    beforeEach(async () => {
-      token = await Wibcoin.new({ from: owner });
-      tokenTimelockPool = await TokenTimelockPool.new(token.address, 1000, releaseDate, {
-        from: owner,
-      });
-      await token.transfer(tokenTimelockPool.address, totalFunds, { from: owner });
+  it('transfers the corresponding tokens to the beneficiaries', async () => {
+    await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
+    await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
+    await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
 
-      await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
-      await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
+    await increaseTime(oneDay * 5);
+
+    const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
+    const timelockContract0 = TokenTimelock.at(contracts[0]);
+    const timelockContract1 = TokenTimelock.at(contracts[1]);
+
+    const balanceBefore = await token.balanceOf.call(beneficiary1);
+    await timelockContract0.release();
+    await timelockContract1.release();
+    const balanceAfter = await token.balanceOf.call(beneficiary1);
+
+    assert.equal(Number(balanceAfter) - Number(balanceBefore), 200);
+
+    try {
       await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
-    });
-
-    it('transfers the corresponding tokens to the beneficiaries', async () => {
-      await increaseTime(oneDay * 2);
-
-      const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
-      const timelockContract0 = TokenTimelock.at(contracts[0]);
-      const timelockContract1 = TokenTimelock.at(contracts[1]);
-
-      const balanceBefore = await token.balanceOf.call(beneficiary1);
-      await timelockContract0.release();
-      await timelockContract1.release();
-      const balanceAfter = await token.balanceOf.call(beneficiary1);
-
-      assert.equal(Number(balanceAfter) - Number(balanceBefore), 200);
-
-      try {
-        await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
-    });
+      assert.fail();
+    } catch (error) {
+      assertRevert(error);
+    }
   });
 });

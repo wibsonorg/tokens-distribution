@@ -29,20 +29,38 @@ export function assertRevert(error) {
  * @throws {Error} when it fails to increase time or mine the block after.
  */
 export function increaseTime(duration) {
+  const id = Date.now();
+
   return new Promise((resolve, reject) => {
     web3.currentProvider.sendAsync({
       jsonrpc: '2.0',
       method: 'evm_increaseTime',
       params: [duration],
-      id: new Date().getSeconds(),
+      id,
     }, (errIncreaseTime) => { // eslint-disable-line consistent-return
       if (errIncreaseTime) return reject(errIncreaseTime);
 
       web3.currentProvider.sendAsync({
         jsonrpc: '2.0',
         method: 'evm_mine',
-        id: new Date().getSeconds(),
+        id: id + 1,
       }, (errMine, res) => (errMine ? reject(errMine) : resolve(res)));
     });
   });
+}
+
+// Advance to the next block
+export function advanceBlock() {
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.sendAsync({
+      jsonrpc: '2.0',
+      method: 'evm_mine',
+      id: Date.now(),
+    }, (err, res) => (err ? reject(err) : resolve(res)));
+  });
+}
+
+// Returns the time of the last mined block in seconds
+export function now() {
+  return web3.eth.getBlock('latest').timestamp;
 }
