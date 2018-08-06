@@ -227,6 +227,58 @@ contract('TokenVestingPool', (accounts) => {
     });
   });
 
+  describe('#publicAttributes', () => {
+    let contract;
+    const totalFunds = 100;
+    const beneficiaryAmount = 10;
+
+    beforeEach(async () => {
+      contract = await TokenVestingPool.new(token.address, totalFunds, { from: owner });
+      await token.transfer(contract.address, totalFunds);
+
+      await contract.addBeneficiary(
+        beneficiary1,
+        start,
+        oneDay,
+        oneWeek,
+        false,
+        beneficiaryAmount,
+        {
+          from: owner,
+        },
+      );
+    });
+
+    it('uses the same token address as passed to the constructor', async () => {
+      const tokenAddress = await contract.token();
+      assert.equal(tokenAddress, token.address, 'Token address does not match');
+    });
+
+    it('does not modify total funds after adding a beneficiary', async () => {
+      const funds = await contract.totalFunds();
+      assert.equal(funds, totalFunds, 'Total Funds changed');
+    });
+
+    it('does updates distributed tokens after adding a beneficiary', async () => {
+      const distributedTokens = await contract.distributedTokens();
+      assert.equal(distributedTokens, beneficiaryAmount, 'Distributed Tokens is not correct');
+    });
+
+    it('does updates beneficiaries list after adding a beneficiary', async () => {
+      const beneficiary = await contract.beneficiaries(0);
+      assert.equal(beneficiary, beneficiary1, 'Beneficiaries list is not correct');
+    });
+
+    it('does updates beneficiary distribution contracts mapping after adding a beneficiary', async () => {
+      const contractAddress = await contract.beneficiaryDistributionContracts(beneficiary1, 0);
+      const contracts = await contract.getDistributionContracts(beneficiary1);
+      const vestingBeneficiary = await TokenVesting.at(contractAddress).beneficiary();
+      assert.equal(contracts.length, 1, 'Distribution contracts list should have one element');
+      assert.equal(contractAddress, contracts[0], 'Distribution contracts list should have mapping content');
+      assert.equal(vestingBeneficiary, beneficiary1, 'Distribution contract does not belong to beneficiary');
+    });
+  });
+
   describe('#revoke', () => {
     let contract;
 
@@ -419,7 +471,7 @@ contract('TokenVestingPool', (accounts) => {
       // the first is released entirely (100 tokens)
       // the second releases one out of seven days (100 / 7 ~= 14 tokens)
       // the third releases one out of seven days (100 / 7 ~= 14 tokens)
-      assert.equal((Number(balanceAfter) - Number(balanceBefore)), 128);
+      assert.equal(Number(balanceAfter) - Number(balanceBefore), 128);
     });
   });
 });
