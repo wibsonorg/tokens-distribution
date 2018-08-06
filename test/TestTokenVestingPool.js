@@ -1,5 +1,5 @@
 const {
-  assertRevert, increaseTime, snapshot, revert,
+  assertRevert, increaseTime, now, advanceBlock,
 } = require('./utils/helpers');
 
 const TokenVestingPool = artifacts.require('./TokenVestingPool.sol');
@@ -13,15 +13,20 @@ contract('TokenVestingPool', (accounts) => {
   const zeroAddress = '0x0000000000000000000000000000000000000000';
   const fakeAddress = '0x0123123123123123123123123123123123123123';
 
-  const start = Math.floor(Date.now() / 1000);
   const oneHour = 3600;
   const oneDay = 86400;
   const oneWeek = oneDay * 7;
   const oneMonth = oneDay * 30;
 
   let token;
+  let start;
+
+  before(async () => {
+    await advanceBlock();
+  });
 
   beforeEach(async () => {
+    start = now();
     token = await Wibcoin.new({ from: owner });
   });
 
@@ -422,7 +427,7 @@ contract('TokenVestingPool', (accounts) => {
       // the first is released entirely (100 tokens)
       // the second releases one out of seven days (100 / 7 ~= 14 tokens)
       // the third releases one out of seven days (100 / 7 ~= 14 tokens)
-      assert.ok((Number(balanceAfter) - Number(balanceBefore)) >= 128);
+      assert.equal((Number(balanceAfter) - Number(balanceBefore)), 128);
     });
 
 
