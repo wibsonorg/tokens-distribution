@@ -10,21 +10,23 @@ contract('TokenTimelockPool', (accounts) => {
   const oneDay = 86400;
   const owner = accounts[0];
   const beneficiary1 = accounts[1];
-  const beneficiary1Amount = 1000;
+  const beneficiary1Amount1 = 1000;
+  const beneficiary1Amount2 = 2000;
   const beneficiary2 = accounts[2];
-  const beneficiary2Amount = 1500;
-  const totalFunds = beneficiary1Amount + beneficiary2Amount;
+  const beneficiary2Amount1 = 1500;
 
   let token;
-  let tokenTimelockPool;
   let releaseDate;
+  let totalFunds;
+  let tokenTimelockPool;
   before(async () => {
     await advanceBlock();
   });
 
   beforeEach(async () => {
-    releaseDate = now() + oneDay;
     token = await Wibcoin.new({ from: owner });
+    releaseDate = now() + oneDay;
+    totalFunds = 50000;
     tokenTimelockPool = await TokenTimelockPool.new(token.address, totalFunds, releaseDate, {
       from: owner,
     });
@@ -33,7 +35,7 @@ contract('TokenTimelockPool', (accounts) => {
 
   describe('#constructor', () => {
     it('instantiates the contract', async () => {
-      const contract = await TokenTimelockPool.new(token.address, 1000, releaseDate, {
+      const contract = await TokenTimelockPool.new(token.address, totalFunds, releaseDate, {
         from: owner,
       });
       assert(contract, 'TokenTimelockPool could not be instantiated');
@@ -41,7 +43,7 @@ contract('TokenTimelockPool', (accounts) => {
 
     it('does not instantiate the contract when the token is not a valid address', async () => {
       try {
-        await TokenTimelockPool.new('0x0', 1000, releaseDate, { from: owner });
+        await TokenTimelockPool.new('0x0', totalFunds, releaseDate, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -59,7 +61,7 @@ contract('TokenTimelockPool', (accounts) => {
 
     it('does not instantiate the contract when the release date is now', async () => {
       try {
-        await TokenTimelockPool.new(token.address, 1000, Date.now() / 1000, { from: owner });
+        await TokenTimelockPool.new(token.address, totalFunds, Date.now() / 1000, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -67,8 +69,9 @@ contract('TokenTimelockPool', (accounts) => {
     });
 
     it('does not instantiate the contract when the release date is in the past', async () => {
+      const pastDate = releaseDate - 100000;
       try {
-        await TokenTimelockPool.new(token.address, 1000, releaseDate - 100000, { from: owner });
+        await TokenTimelockPool.new(token.address, totalFunds, pastDate, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -78,17 +81,17 @@ contract('TokenTimelockPool', (accounts) => {
 
   describe('#addBeneficiary', () => {
     it('adds a beneficiary to the token pool', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
     });
 
     it('adds a beneficiary when the beneficiary already exists in the pool', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount2, { from: owner });
     });
 
     it('does not add a beneficiary when the beneficiary is not a valid address', async () => {
       try {
-        await tokenTimelockPool.addBeneficiary('0x0', beneficiary1Amount, { from: owner });
+        await tokenTimelockPool.addBeneficiary('0x0', beneficiary1Amount1, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -97,7 +100,7 @@ contract('TokenTimelockPool', (accounts) => {
 
     it('does not add a beneficiary when the beneficiary is the owner of the pool', async () => {
       try {
-        await tokenTimelockPool.addBeneficiary(owner, beneficiary1Amount, { from: owner });
+        await tokenTimelockPool.addBeneficiary(owner, beneficiary1Amount1, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -106,7 +109,7 @@ contract('TokenTimelockPool', (accounts) => {
 
     it('does not add a beneficiary when the beneficiary is the contract itself', async () => {
       try {
-        await tokenTimelockPool.addBeneficiary(tokenTimelockPool.address, beneficiary1Amount, {
+        await tokenTimelockPool.addBeneficiary(tokenTimelockPool.address, beneficiary1Amount1, {
           from: owner,
         });
         assert.fail();
@@ -138,7 +141,18 @@ contract('TokenTimelockPool', (accounts) => {
         const pool = await TokenTimelockPool.new(token.address, totalFunds, releaseDate, {
           from: owner,
         });
-        await pool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
+        await pool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('does not add a beneficiary after the release date', async () => {
+      await increaseTime(oneDay * 5);
+
+      try {
+        await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -148,7 +162,7 @@ contract('TokenTimelockPool', (accounts) => {
 
   describe('#getDistributionContracts', () => {
     it('returns the distribution contracts for a given beneficiary', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount, { from: owner });
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
       const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
       const firstContract = await tokenTimelockPool.beneficiaryDistributionContracts(
         beneficiary1,
@@ -173,29 +187,90 @@ contract('TokenTimelockPool', (accounts) => {
     });
   });
 
-  it('transfers the corresponding tokens to the beneficiaries', async () => {
-    await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
-    await tokenTimelockPool.addBeneficiary(beneficiary1, 100);
-    await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
+  describe('#publicAttributes', () => {
+    it('uses the same token address as passed to the constructor', async () => {
+      const tokenAddress = await tokenTimelockPool.token();
+      assert.equal(tokenAddress, token.address, 'Token address does not match');
+    });
 
-    await increaseTime(oneDay * 5);
+    it('does not modify total funds after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const funds = await tokenTimelockPool.totalFunds();
+      assert.equal(funds, totalFunds, 'Total Funds changed');
+    });
 
-    const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
-    const timelockContract0 = TokenTimelock.at(contracts[0]);
-    const timelockContract1 = TokenTimelock.at(contracts[1]);
+    it('updates distributed tokens after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const distributedTokens = await tokenTimelockPool.distributedTokens();
+      assert.equal(distributedTokens, beneficiary1Amount1, 'Distributed Tokens is not correct');
+    });
 
-    const balanceBefore = await token.balanceOf.call(beneficiary1);
-    await timelockContract0.release();
-    await timelockContract1.release();
-    const balanceAfter = await token.balanceOf.call(beneficiary1);
+    it('updates beneficiaries list after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const beneficiary = await tokenTimelockPool.beneficiaries(0);
+      assert.equal(beneficiary, beneficiary1, 'Beneficiaries list is not correct');
+    });
 
-    assert.equal(Number(balanceAfter) - Number(balanceBefore), 200);
+    it('updates beneficiary distribution contracts mapping after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const contractAddress = await tokenTimelockPool.beneficiaryDistributionContracts(
+        beneficiary1,
+        0,
+      );
+      const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
+      const timelockBeneficiary = await TokenTimelock.at(contractAddress).beneficiary();
+      assert.equal(contracts.length, 1, 'Distribution contracts list should have one element');
+      assert.equal(contractAddress, contracts[0], 'Distribution contracts list should have mapping content');
+      assert.equal(timelockBeneficiary, beneficiary1, 'Distribution contract does not belong to beneficiary');
+    });
+  });
 
-    try {
-      await tokenTimelockPool.addBeneficiary(beneficiary2, 100);
-      assert.fail();
-    } catch (error) {
-      assertRevert(error);
-    }
+  context('Integration Test', () => {
+    it('performs all actions successfully', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount2, { from: owner });
+      await tokenTimelockPool.addBeneficiary(beneficiary2, beneficiary2Amount1, { from: owner });
+
+      assert.equal((await token.balanceOf.call(beneficiary1)), 0);
+      assert.equal((await token.balanceOf.call(beneficiary2)), 0);
+
+      await increaseTime(oneDay * 5);
+
+      const beneficiary1Contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
+      const beneficiary1Contract1 = beneficiary1Contracts[0];
+      const beneficiary1Contract2 = beneficiary1Contracts[1];
+      assert.equal((await token.balanceOf.call(beneficiary1Contract1)), beneficiary1Amount1);
+      assert.equal((await token.balanceOf.call(beneficiary1Contract2)), beneficiary1Amount2);
+
+      const beneficiary2Contracts = await tokenTimelockPool.getDistributionContracts(beneficiary2);
+      const beneficiary2Contract1 = beneficiary2Contracts[0];
+      assert.equal((await token.balanceOf.call(beneficiary2Contract1)), beneficiary2Amount1);
+
+      const beneficiary1Contract1Timelock = TokenTimelock.at(beneficiary1Contract1);
+      await beneficiary1Contract1Timelock.release();
+      assert.equal((await token.balanceOf.call(beneficiary1)), beneficiary1Amount1);
+      assert.equal((await token.balanceOf.call(beneficiary1Contract1)), 0);
+
+      const beneficiary1Contract2Timelock = TokenTimelock.at(beneficiary1Contract2);
+      await beneficiary1Contract2Timelock.release();
+      assert.equal(
+        (await token.balanceOf.call(beneficiary1)),
+        (beneficiary1Amount1 + beneficiary1Amount2),
+      );
+      assert.equal((await token.balanceOf.call(beneficiary1Contract2)), 0);
+
+      const beneficiary2Contract1Timelock = TokenTimelock.at(beneficiary2Contract1);
+      await beneficiary2Contract1Timelock.release();
+      assert.equal((await token.balanceOf.call(beneficiary2)), beneficiary2Amount1);
+      assert.equal((await token.balanceOf.call(beneficiary2Contract1)), 0);
+
+      const distributedTokens = await tokenTimelockPool.distributedTokens();
+      const totalDistributed = beneficiary1Amount1 + beneficiary1Amount2 + beneficiary2Amount1;
+      assert.equal(Number(distributedTokens), totalDistributed);
+      assert.equal(
+        (await token.balanceOf.call(tokenTimelockPool.address)),
+        (totalFunds - totalDistributed),
+      );
+    });
   });
 });

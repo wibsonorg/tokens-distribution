@@ -14,7 +14,11 @@ module.exports = (deployer, network) => {
   // Will always take the first available account as owner (from mnemonic or ganache).
   // When using a provider, change the account index in deploy.js
 
-  return deployer.deploy(SafeMath)
+  if (DeployUtils.isTest(network)) {
+    return;
+  }
+
+  return deployer.deploy(SafeMath) // eslint-disable-line consistent-return
     .then(() => deployer.link(SafeMath, TokenVestingPool))
     .then(() => deployer.deploy(TokenVestingPool, vesting.tokenAddress, vesting.totalFunds))
     .then(() => deployer.link(SafeMath, TokenTimelockPool))
