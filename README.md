@@ -43,11 +43,11 @@ npm run truffle -- console --network staging # To test within the console
 ## Deployment status
 
 ### Ropsten
-| Contract          | Address |
-| ----------------- | ------- |
-| Migrations        | `0x`    |
-| TokenVestingPool  | `0x`    |
-| TokenTimelockPool | `0x`    |
+| Contract          | Address                                         |
+| ----------------- | ----------------------------------------------- |
+| Migrations        | `0xee300980496800654bcb1cd46b93a21c704a1d2a`    |
+| TokenVestingPool  | `0xafc8f813874927aeab990bf9f8ed55b14311e2ef`    |
+| TokenTimelockPool | `0xb621a3ec33465e86f7e139c5cda6c39224615b41`    |
 
 ### Mainnet
 | Contract          | Address |

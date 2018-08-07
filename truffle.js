@@ -25,12 +25,12 @@ module.exports = {
     remoteDevelopment: {
       provider: () => DeployUtils.getProvider('ropsten', 'remoteDevelopment'),
       network_id: 3, // 1: Mainnet, 3: Ropsten
-      gas: 7500000,
+      gas: 4600000,
     },
     staging: {
       provider: () => DeployUtils.getProvider('ropsten', 'staging'),
       network_id: 3, // 1: Mainnet, 3: Ropsten
-      gas: 7500000,
+      gas: 4600000,
     },
     production: {
       provider: () => DeployUtils.getProvider('mainnet', 'production'),
