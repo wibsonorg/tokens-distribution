@@ -45,9 +45,9 @@ npm run truffle -- console --network staging # To test within the console
 ### Ropsten
 | Contract          | Address                                         |
 | ----------------- | ----------------------------------------------- |
-| Migrations        | `0xee300980496800654bcb1cd46b93a21c704a1d2a`    |
-| TokenVestingPool  | `0xafc8f813874927aeab990bf9f8ed55b14311e2ef`    |
-| TokenTimelockPool | `0xb621a3ec33465e86f7e139c5cda6c39224615b41`    |
+| Migrations        | `0xff7413f8cf53affb9535b211011d8d99553bf477`    |
+| TokenVestingPool  | `0xb270ad513260f87d1b471860f8287eaf0599e2b9`    |
+| TokenTimelockPool | `0x5183bbb25a55601998abb48fe4ef16dc46eb1b98`    |
 
 ### Mainnet
 | Contract          | Address |
