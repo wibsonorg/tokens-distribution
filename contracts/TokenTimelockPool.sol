@@ -117,6 +117,21 @@ contract TokenTimelockPool is Ownable {
   }
 
   /**
+   * @notice Transfers the remaining tokens that were not locked for any
+   *         beneficiary to the owner of this contract.
+   * @dev The `msg.sender` must be the owner of the contract.
+   * @return true if tokens were reclaimed successfully, reverts otherwise.
+   */
+  function reclaim() public onlyOwner returns (bool) {
+    // solium-disable-next-line security/no-block-members
+    require(block.timestamp > releaseDate);
+    uint256 reclaimableAmount = token.balanceOf(address(this));
+
+    token.safeTransfer(owner, reclaimableAmount);
+    return true;
+  }
+
+  /**
    * @notice Gets an array of all the distribution contracts for a given beneficiary.
    * @param _beneficiary address of the beneficiary to whom tokens will be transferred.
    * @return List of TokenTimelock addresses.
