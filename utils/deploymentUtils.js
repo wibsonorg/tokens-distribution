@@ -30,3 +30,5 @@ exports.getProvider = function getProvider(network, environment) {
 exports.getEnvironmentAccounts = function getEnvironmentAccounts(environment) {
   return getEnvironmentConfig(environment);
 };
+
+exports.isTest = function isDevelop(network) { return ['test', 'coverage'].includes(network); };

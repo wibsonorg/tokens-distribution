@@ -187,6 +187,44 @@ contract('TokenTimelockPool', (accounts) => {
     });
   });
 
+  describe('#publicAttributes', () => {
+    it('uses the same token address as passed to the constructor', async () => {
+      const tokenAddress = await tokenTimelockPool.token();
+      assert.equal(tokenAddress, token.address, 'Token address does not match');
+    });
+
+    it('does not modify total funds after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const funds = await tokenTimelockPool.totalFunds();
+      assert.equal(funds, totalFunds, 'Total Funds changed');
+    });
+
+    it('updates distributed tokens after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const distributedTokens = await tokenTimelockPool.distributedTokens();
+      assert.equal(distributedTokens, beneficiary1Amount1, 'Distributed Tokens is not correct');
+    });
+
+    it('updates beneficiaries list after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const beneficiary = await tokenTimelockPool.beneficiaries(0);
+      assert.equal(beneficiary, beneficiary1, 'Beneficiaries list is not correct');
+    });
+
+    it('updates beneficiary distribution contracts mapping after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const contractAddress = await tokenTimelockPool.beneficiaryDistributionContracts(
+        beneficiary1,
+        0,
+      );
+      const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
+      const timelockBeneficiary = await TokenTimelock.at(contractAddress).beneficiary();
+      assert.equal(contracts.length, 1, 'Distribution contracts list should have one element');
+      assert.equal(contractAddress, contracts[0], 'Distribution contracts list should have mapping content');
+      assert.equal(timelockBeneficiary, beneficiary1, 'Distribution contract does not belong to beneficiary');
+    });
+  });
+
   context('Integration Test', () => {
     it('performs all actions successfully', async () => {
       await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
