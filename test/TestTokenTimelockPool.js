@@ -187,6 +187,74 @@ contract('TokenTimelockPool', (accounts) => {
     });
   });
 
+  describe('#reclaim', () => {
+    it('reclaims tokens that were not held', async () => {
+      await increaseTime(oneDay * 5);
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), totalFunds);
+
+      await tokenTimelockPool.reclaim({ from: owner });
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
+    });
+
+    it('reclaims tokens that were not held after adding a beneficiary', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      await increaseTime(oneDay * 5);
+
+      assert.equal(
+        (await token.balanceOf.call(tokenTimelockPool.address)),
+        (totalFunds - beneficiary1Amount1),
+      );
+      await tokenTimelockPool.reclaim({ from: owner });
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
+    });
+
+    it('reclaimed tokens are transfered to the owner of the contract', async () => {
+      await increaseTime(oneDay * 5);
+      const ownerInitialBalance = await token.balanceOf.call(owner);
+      await tokenTimelockPool.reclaim({ from: owner });
+      const ownerAfterReclaimBalance = await token.balanceOf.call(owner);
+
+      assert.ok(ownerInitialBalance.plus(totalFunds).eq(ownerAfterReclaimBalance));
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
+    });
+
+    it('does not reclaim tokens if caller is not the owner', async () => {
+      await increaseTime(oneDay * 5);
+      try {
+        await tokenTimelockPool.reclaim({ from: beneficiary1 });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('does not reclaim tokens before the release date', async () => {
+      try {
+        await tokenTimelockPool.reclaim({ from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('does not reclaim tokens that are on hold', async () => {
+      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      await increaseTime(oneDay * 5);
+
+      const b1Timelocks = await tokenTimelockPool.getDistributionContracts(beneficiary1);
+      const b1Timelock = b1Timelocks[0];
+      assert.equal((await token.balanceOf.call(b1Timelock)), beneficiary1Amount1);
+
+      await tokenTimelockPool.reclaim({ from: owner });
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
+
+      assert.equal((await token.balanceOf.call(b1Timelock)), beneficiary1Amount1);
+      const b1TimelockContract = TokenTimelock.at(b1Timelock);
+      await b1TimelockContract.release({ from: beneficiary1 });
+      assert.equal((await token.balanceOf.call(beneficiary1)), beneficiary1Amount1);
+    });
+  });
+
   describe('#publicAttributes', () => {
     it('uses the same token address as passed to the constructor', async () => {
       const tokenAddress = await tokenTimelockPool.token();
@@ -271,6 +339,10 @@ contract('TokenTimelockPool', (accounts) => {
         (await token.balanceOf.call(tokenTimelockPool.address)),
         (totalFunds - totalDistributed),
       );
+
+      assert.ok((await token.balanceOf.call(tokenTimelockPool.address)) > 0);
+      await tokenTimelockPool.reclaim();
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
     });
   });
 });
