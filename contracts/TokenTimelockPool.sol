@@ -97,21 +97,24 @@ contract TokenTimelockPool is Ownable {
     require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
     require(token.balanceOf(address(this)) >= _amount);
 
-    // Assign the tokens to the beneficiary
+    if (!beneficiaryExists(_beneficiary)) {
+      beneficiaries.push(_beneficiary);
+    }
+
+    // Bookkepping of distributed tokens
+    distributedTokens = distributedTokens.add(_amount);
+
     address tokenTimelock = new TokenTimelock(
       token,
       _beneficiary,
       releaseDate
     );
-    token.safeTransfer(tokenTimelock, _amount);
 
-    if (!beneficiaryExists(_beneficiary)) {
-      beneficiaries.push(_beneficiary);
-    }
-
-    // Bookkeeping
+    // Bookkeeping of distributions contracts per beneficiary
     beneficiaryDistributionContracts[_beneficiary].push(tokenTimelock);
-    distributedTokens = distributedTokens.add(_amount);
+
+    // Assign the tokens to the beneficiary
+    token.safeTransfer(tokenTimelock, _amount);
 
     return tokenTimelock;
   }

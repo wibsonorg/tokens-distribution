@@ -118,7 +118,13 @@ contract TokenVestingPool is Ownable {
     require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
     require(token.balanceOf(address(this)) >= _amount);
 
-    // Assign the tokens to the beneficiary
+    if (!beneficiaryExists(_beneficiary)) {
+      beneficiaries.push(_beneficiary);
+    }
+
+    // Bookkepping of distributed tokens
+    distributedTokens = distributedTokens.add(_amount);
+
     address tokenVesting = new TokenVesting(
       _beneficiary,
       _start,
@@ -126,16 +132,13 @@ contract TokenVestingPool is Ownable {
       _duration,
       _revocable
     );
-    token.safeTransfer(tokenVesting, _amount);
 
-    if (!beneficiaryExists(_beneficiary)) {
-      beneficiaries.push(_beneficiary);
-    }
-
-    // Bookkeeping
+    // Bookkeeping of distributions contracts per beneficiary
     beneficiaryDistributionContracts[_beneficiary].push(tokenVesting);
-    distributedTokens = distributedTokens.add(_amount);
     distributionContracts[tokenVesting] = true;
+
+    // Assign the tokens to the beneficiary
+    token.safeTransfer(tokenVesting, _amount);
 
     return tokenVesting;
   }
