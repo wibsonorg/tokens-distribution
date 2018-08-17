@@ -12,7 +12,6 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * @notice This contract models a pool of tokens to be distributed among beneficiaries,
  * releasing the entire pool on a specific date. There is no need to know the
  * beneficiaries in advance, since the contract allows to add them as time goes by.
- * Note that tokens are NOT revocable.
  * Tokens that were not distributed by the release date will stay in the pool until
  * they are assigned. In which case, the new beneficiary will be able to release
  * them immediately.
