@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
@@ -12,9 +12,6 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * @notice This contract models a pool of tokens to be distributed among beneficiaries
  * with different lock-up and vesting conditions. There is no need to know the
  * beneficiaries in advance, since the contract allows to add them as time goes by.
- * Optionally, when assigning tokens to a specific beneficiary, the contract owner
- * may decide to make them revocable for that particular case. In which case, the
- * tokens would be refunded to the pool (not the contract owner).
  * @dev There is only one method to add a beneficiary. By doing this, not only
  * both modes (lock-up and vesting) can be achieved, but they can also be combined
  * as suitable. Moreover, total funds and distributed tokens are controlled to
@@ -75,7 +72,6 @@ contract TokenVestingPool is Ownable {
    *             604800,     // Tokens are released after one week
    *             604800,     // Duration of the release period. In this case, once the cliff
    *                         // period is finished, the beneficiary will receive the tokens.
-   *             false,      // Vesting cannot be revoked
    *             100         // Amount of tokens to be released
    *           )
    *         Example 2 - Vesting mode:
@@ -86,19 +82,13 @@ contract TokenVestingPool is Ownable {
    *             345600,     // The release period will start after the cliff period and
    *                         // it will last for two weeks. Tokens will be released uniformly
    *                         // during this period.
-   *             true,       // Remaining amount of tokens can be revoked
    *             100         // Amount of tokens to be released
    *           )
    *
-   * @dev Invoking this method with _revocable = true will give the owner the ability
-   *      of revoking the token vesting in any time after the _start period. Tokens already
-   *      vested remain in the TokenVesting contract instance (if not released), the rest
-   *      are returned to this contract.
    * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
    * @param _start the time (as Unix time) at which point vesting starts
    * @param _cliff duration in seconds of the cliff in which tokens will begin to vest
    * @param _duration duration in seconds of the period in which the tokens will vest
-   * @param _revocable whether the vesting is revocable or not
    * @param _amount amount of tokens to be released
    * @return address for the new TokenVesting contract instance.
    */
@@ -107,7 +97,6 @@ contract TokenVestingPool is Ownable {
     uint256 _start,
     uint256 _cliff,
     uint256 _duration,
-    bool _revocable,
     uint256 _amount
   ) public onlyOwner validAddress(_beneficiary) returns (address) {
     require(_beneficiary != owner);
@@ -118,49 +107,29 @@ contract TokenVestingPool is Ownable {
     require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
     require(token.balanceOf(address(this)) >= _amount);
 
-    // Assign the tokens to the beneficiary
+    if (!beneficiaryExists(_beneficiary)) {
+      beneficiaries.push(_beneficiary);
+    }
+
+    // Bookkepping of distributed tokens
+    distributedTokens = distributedTokens.add(_amount);
+
     address tokenVesting = new TokenVesting(
       _beneficiary,
       _start,
       _cliff,
       _duration,
-      _revocable
+      false // TokenVesting cannot be revoked
     );
-    token.safeTransfer(tokenVesting, _amount);
 
-    if (!beneficiaryExists(_beneficiary)) {
-      beneficiaries.push(_beneficiary);
-    }
-
-    // Bookkeeping
+    // Bookkeeping of distributions contracts per beneficiary
     beneficiaryDistributionContracts[_beneficiary].push(tokenVesting);
-    distributedTokens = distributedTokens.add(_amount);
     distributionContracts[tokenVesting] = true;
 
+    // Assign the tokens to the beneficiary
+    token.safeTransfer(tokenVesting, _amount);
+
     return tokenVesting;
-  }
-
-  /**
-   * @notice Revokes the vesting of the remaining tokens. Tokens are returned
-   *         to the TokenVestingPool contract.
-   * @dev The `msg.sender` must be the owner of the contract.
-   * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
-   * @param _tokenVesting address of the TokenVesting contract used to
-   *        release tokens to the beneficiary
-   * @return true if the tokens were revoked successfully, reverts otherwise.
-   */
-  function revoke(
-    address _beneficiary,
-    address _tokenVesting
-  ) public onlyOwner validAddress(_beneficiary) validAddress(_tokenVesting)
-  returns (bool) {
-    TokenVesting tv = TokenVesting(_tokenVesting);
-    require(beneficiaryExists(_beneficiary));
-    require(distributionContracts[_tokenVesting]);
-    require(tv.beneficiary() == _beneficiary);
-
-    tv.revoke(token);
-    return true;
   }
 
   /**

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
@@ -12,7 +12,6 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * @notice This contract models a pool of tokens to be distributed among beneficiaries,
  * releasing the entire pool on a specific date. There is no need to know the
  * beneficiaries in advance, since the contract allows to add them as time goes by.
- * Note that tokens are NOT revocable.
  * Tokens that were not distributed by the release date will stay in the pool until
  * they are assigned. In which case, the new beneficiary will be able to release
  * them immediately.
@@ -97,21 +96,24 @@ contract TokenTimelockPool is Ownable {
     require(SafeMath.sub(totalFunds, distributedTokens) >= _amount);
     require(token.balanceOf(address(this)) >= _amount);
 
-    // Assign the tokens to the beneficiary
+    if (!beneficiaryExists(_beneficiary)) {
+      beneficiaries.push(_beneficiary);
+    }
+
+    // Bookkepping of distributed tokens
+    distributedTokens = distributedTokens.add(_amount);
+
     address tokenTimelock = new TokenTimelock(
       token,
       _beneficiary,
       releaseDate
     );
-    token.safeTransfer(tokenTimelock, _amount);
 
-    if (!beneficiaryExists(_beneficiary)) {
-      beneficiaries.push(_beneficiary);
-    }
-
-    // Bookkeeping
+    // Bookkeeping of distributions contracts per beneficiary
     beneficiaryDistributionContracts[_beneficiary].push(tokenTimelock);
-    distributedTokens = distributedTokens.add(_amount);
+
+    // Assign the tokens to the beneficiary
+    token.safeTransfer(tokenTimelock, _amount);
 
     return tokenTimelock;
   }
