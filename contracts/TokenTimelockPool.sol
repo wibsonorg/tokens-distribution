@@ -40,6 +40,13 @@ contract TokenTimelockPool is Ownable {
   // Mapping of beneficiary to TokenTimelock contracts addresses
   mapping(address => address[]) public beneficiaryDistributionContracts;
 
+  event BeneficiaryAdded(
+    address indexed beneficiary,
+    address timelock,
+    uint256 amount
+  );
+  event Reclaim();
+
   modifier validAddress(address _addr) {
     require(_addr != address(0));
     require(_addr != address(this));
@@ -115,6 +122,7 @@ contract TokenTimelockPool is Ownable {
     // Assign the tokens to the beneficiary
     token.safeTransfer(tokenTimelock, _amount);
 
+    emit BeneficiaryAdded(_beneficiary, tokenTimelock, _amount);
     return tokenTimelock;
   }
 
@@ -130,6 +138,7 @@ contract TokenTimelockPool is Ownable {
     uint256 reclaimableAmount = token.balanceOf(address(this));
 
     token.safeTransfer(owner, reclaimableAmount);
+    emit Reclaim();
     return true;
   }
 

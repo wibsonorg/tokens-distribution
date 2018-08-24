@@ -39,6 +39,12 @@ contract TokenVestingPool is Ownable {
   // Tracks the distribution contracts created by this contract.
   mapping(address => bool) private distributionContracts;
 
+  event BeneficiaryAdded(
+    address indexed beneficiary,
+    address vesting,
+    uint256 amount
+  );
+
   modifier validAddress(address _addr) {
     require(_addr != address(0));
     require(_addr != address(this));
@@ -129,6 +135,7 @@ contract TokenVestingPool is Ownable {
     // Assign the tokens to the beneficiary
     token.safeTransfer(tokenVesting, _amount);
 
+    emit BeneficiaryAdded(_beneficiary, tokenVesting, _amount);
     return tokenVesting;
   }
 

@@ -1,6 +1,6 @@
 const BigNumber = require('bignumber.js');
 const {
-  assertRevert, increaseTime, now, advanceBlock,
+  assertRevert, assertEvent, increaseTime, now, advanceBlock,
 } = require('./utils/helpers');
 
 const TokenVestingPool = artifacts.require('./TokenVestingPool.sol');
@@ -142,35 +142,37 @@ contract('TokenVestingPool', (accounts) => {
     });
 
     it('adds a beneficiary to the token pool', async () => {
-      const {
-        receipt: { status },
-      } = await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1e10', {
+      const tx = await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1e10', {
         from: owner,
       });
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
 
+      const { receipt: { status } } = tx;
       assert.equal(status, 1, 'Could not add beneficiary');
     });
 
     it('adds a beneficiary even if the start date precedes the invocation of this method', async () => {
-      const {
-        receipt: { status },
-      } = await contract.addBeneficiary(beneficiary1, start - oneWeek, oneDay, oneWeek, '1e10', {
+      const tx = await contract.addBeneficiary(beneficiary1, start - oneWeek, oneDay, oneWeek, '1e10', {
         from: owner,
       });
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
 
+      const { receipt: { status } } = tx;
       assert.equal(status, 1, 'Could not add beneficiary');
     });
 
     it('adds another token vesting contract when the beneficiary exists in the pool', async () => {
-      await contract.addBeneficiary(beneficiary1, start - oneWeek, oneDay, oneWeek, '1e10', {
+      const tx1 = await contract.addBeneficiary(beneficiary1, start - oneWeek, oneDay, oneWeek, '1e10', {
         from: owner,
       });
-      const {
-        receipt: { status },
-      } = await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1.5e10', {
-        from: owner,
-      });
+      assertEvent(tx1, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
 
+      const tx2 = await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1.5e10', {
+        from: owner,
+      });
+      assertEvent(tx2, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const { receipt: { status } } = tx2;
       assert.equal(status, 1, 'Could not add vesting contract');
     });
   });
@@ -184,7 +186,7 @@ contract('TokenVestingPool', (accounts) => {
       contract = await TokenVestingPool.new(token.address, totalFunds, { from: owner });
       await token.transfer(contract.address, totalFunds);
 
-      await contract.addBeneficiary(
+      const tx = await contract.addBeneficiary(
         beneficiary1,
         start,
         oneDay,
@@ -194,6 +196,7 @@ contract('TokenVestingPool', (accounts) => {
           from: owner,
         },
       );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
     });
 
     it('uses the same token address as passed to the constructor', async () => {
@@ -235,7 +238,9 @@ contract('TokenVestingPool', (accounts) => {
     });
 
     it('returns the distribution contracts for a given beneficiary', async () => {
-      await contract.addBeneficiary(beneficiary1, start, oneDay, oneDay, '1e+10', { from: owner });
+      const tx = await contract.addBeneficiary(beneficiary1, start, oneDay, oneDay, '1e+10', { from: owner });
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
       const contracts = await contract.getDistributionContracts(beneficiary1);
       const firstContract = await contract.beneficiaryDistributionContracts(
         beneficiary1,
@@ -269,8 +274,11 @@ contract('TokenVestingPool', (accounts) => {
     });
 
     it('transfers the corresponding tokens to the beneficiaries', async () => {
-      await contract.addBeneficiary(beneficiary1, start, oneDay, oneDay, '1e+11', { from: owner });
-      await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1e+11', { from: owner });
+      const tx1 = await contract.addBeneficiary(beneficiary1, start, oneDay, oneDay, '1e+11', { from: owner });
+      assertEvent(tx1, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const tx2 = await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1e+11', { from: owner });
+      assertEvent(tx2, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
 
       await increaseTime(oneDay * 2);
 
@@ -294,9 +302,14 @@ contract('TokenVestingPool', (accounts) => {
 
 
     it('transfers the corresponding tokens in a 10%-30%-60% scheme', async () => {
-      await contract.addBeneficiary(beneficiary1, start, oneWeek, oneWeek, '1e+10', { from: owner });
-      await contract.addBeneficiary(beneficiary1, start, oneMonth, oneMonth, '3e+10', { from: owner });
-      await contract.addBeneficiary(beneficiary1, start, oneMonth * 3, oneMonth * 3, '6e+10', { from: owner });
+      const tx1 = await contract.addBeneficiary(beneficiary1, start, oneWeek, oneWeek, '1e+10', { from: owner });
+      assertEvent(tx1, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const tx2 = await contract.addBeneficiary(beneficiary1, start, oneMonth, oneMonth, '3e+10', { from: owner });
+      assertEvent(tx2, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const tx3 = await contract.addBeneficiary(beneficiary1, start, oneMonth * 3, oneMonth * 3, '6e+10', { from: owner });
+      assertEvent(tx3, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
 
       const contracts = await contract.getDistributionContracts(beneficiary1);
 
@@ -364,9 +377,14 @@ contract('TokenVestingPool', (accounts) => {
       contract = await TokenVestingPool.new(token.address, '3e+10', { from: owner });
       await token.transfer(contract.address, '3e+10');
 
-      await contract.addBeneficiary(beneficiary1, start, oneMonth, oneMonth, '1e+10', { from: owner });
-      await contract.addBeneficiary(beneficiary1, start, oneMonth * 2, oneMonth * 2, '1e+10', { from: owner });
-      await contract.addBeneficiary(beneficiary1, start, oneMonth * 3, oneMonth * 3, '1e+10', { from: owner });
+      const tx1 = await contract.addBeneficiary(beneficiary1, start, oneMonth, oneMonth, '1e+10', { from: owner });
+      assertEvent(tx1, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const tx2 = await contract.addBeneficiary(beneficiary1, start, oneMonth * 2, oneMonth * 2, '1e+10', { from: owner });
+      assertEvent(tx2, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const tx3 = await contract.addBeneficiary(beneficiary1, start, oneMonth * 3, oneMonth * 3, '1e+10', { from: owner });
+      assertEvent(tx3, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
 
       const contracts = await contract.getDistributionContracts(beneficiary1);
 
