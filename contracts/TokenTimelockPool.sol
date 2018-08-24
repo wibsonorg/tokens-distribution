@@ -45,7 +45,7 @@ contract TokenTimelockPool is Ownable {
     address timelock,
     uint256 amount
   );
-  event Reclaim();
+  event Reclaim(uint256 amount);
 
   modifier validAddress(address _addr) {
     require(_addr != address(0));
@@ -138,7 +138,7 @@ contract TokenTimelockPool is Ownable {
     uint256 reclaimableAmount = token.balanceOf(address(this));
 
     token.safeTransfer(owner, reclaimableAmount);
-    emit Reclaim();
+    emit Reclaim(reclaimableAmount);
     return true;
   }
 
