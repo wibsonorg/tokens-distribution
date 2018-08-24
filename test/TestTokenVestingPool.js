@@ -11,6 +11,7 @@ contract('TokenVestingPool', (accounts) => {
   const owner = accounts[0];
   const beneficiary1 = accounts[1];
   const beneficiary2 = accounts[2];
+  const newOwner = accounts[3];
   const zeroAddress = '0x0000000000000000000000000000000000000000';
 
   const oneHour = 3600;
@@ -174,6 +175,43 @@ contract('TokenVestingPool', (accounts) => {
 
       const { receipt: { status } } = tx2;
       assert.equal(status, 1, 'Could not add vesting contract');
+    });
+
+    it('new owner adds a beneficiary after claiming ownership', async () => {
+      await contract.transferOwnership(newOwner, { from: owner });
+      await contract.claimOwnership({ from: newOwner });
+
+      const tx = await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1e10', {
+        from: newOwner,
+      });
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const { receipt: { status } } = tx;
+      assert.equal(status, 1, 'Could not add beneficiary');
+    });
+
+    it('adds a beneficiary after transferring ownership if it has not been claimed', async () => {
+      await contract.transferOwnership(newOwner, { from: owner });
+
+      const tx = await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1e10', {
+        from: owner,
+      });
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const { receipt: { status } } = tx;
+      assert.equal(status, 1, 'Could not add beneficiary');
+    });
+
+    it('previous owner cannot add a beneficiary after the new owner claims ownership', async () => {
+      await contract.transferOwnership(newOwner, { from: owner });
+      await contract.claimOwnership({ from: newOwner });
+
+      try {
+        await contract.addBeneficiary(beneficiary1, start, oneDay, oneWeek, '1e10', { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
     });
   });
 

@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Claimable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/TokenVesting.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -17,7 +17,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * as suitable. Moreover, total funds and distributed tokens are controlled to
  * avoid refills done by transferring tokens through the ERC20.
  */
-contract TokenVestingPool is Ownable {
+contract TokenVestingPool is Claimable {
   using SafeERC20 for ERC20Basic;
   using SafeMath for uint256;
 
