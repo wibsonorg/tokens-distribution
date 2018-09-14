@@ -1,5 +1,5 @@
 const {
-  assertRevert, increaseTime, now, advanceBlock,
+  assertRevert, assertEvent, increaseTime, now, advanceBlock,
 } = require('./utils/helpers');
 
 const TokenTimelockPool = artifacts.require('./TokenTimelockPool.sol');
@@ -14,6 +14,7 @@ contract('TokenTimelockPool', (accounts) => {
   const beneficiary1Amount2 = 2000;
   const beneficiary2 = accounts[2];
   const beneficiary2Amount1 = 1500;
+  const newOwner = accounts[3];
 
   let token;
   let releaseDate;
@@ -81,12 +82,52 @@ contract('TokenTimelockPool', (accounts) => {
 
   describe('#addBeneficiary', () => {
     it('adds a beneficiary to the token pool', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const tx = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
     });
 
     it('adds a beneficiary when the beneficiary already exists in the pool', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount2, { from: owner });
+      const tx1 = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx1, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+      const tx2 = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount2, { from: owner },
+      );
+      assertEvent(tx2, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+    });
+
+    it('new owner adds a beneficiary after claiming ownership', async () => {
+      await tokenTimelockPool.transferOwnership(newOwner, { from: owner });
+      await tokenTimelockPool.claimOwnership({ from: newOwner });
+
+      const tx = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: newOwner },
+      );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+    });
+
+    it('adds a beneficiary after transferring ownership if it has not been claimed', async () => {
+      await tokenTimelockPool.transferOwnership(newOwner, { from: owner });
+
+      const tx = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+    });
+
+    it('previous owner cannot add a beneficiary after the new owner claims ownership', async () => {
+      await tokenTimelockPool.transferOwnership(newOwner, { from: owner });
+      await tokenTimelockPool.claimOwnership({ from: newOwner });
+
+      try {
+        await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
     });
 
     it('does not add a beneficiary when the beneficiary is not a valid address', async () => {
@@ -162,7 +203,11 @@ contract('TokenTimelockPool', (accounts) => {
 
   describe('#getDistributionContracts', () => {
     it('returns the distribution contracts for a given beneficiary', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const tx = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
       const contracts = await tokenTimelockPool.getDistributionContracts(beneficiary1);
       const firstContract = await tokenTimelockPool.beneficiaryDistributionContracts(
         beneficiary1,
@@ -192,26 +237,34 @@ contract('TokenTimelockPool', (accounts) => {
       await increaseTime(oneDay * 5);
       assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), totalFunds);
 
-      await tokenTimelockPool.reclaim({ from: owner });
+      const tx = await tokenTimelockPool.reclaim({ from: owner });
+      assertEvent(tx, 'Reclaim', 'Did not emit `Reclaim` event');
       assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
     });
 
     it('reclaims tokens that were not held after adding a beneficiary', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const tx1 = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx1, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
       await increaseTime(oneDay * 5);
 
       assert.equal(
         (await token.balanceOf.call(tokenTimelockPool.address)),
         (totalFunds - beneficiary1Amount1),
       );
-      await tokenTimelockPool.reclaim({ from: owner });
+
+      const tx2 = await tokenTimelockPool.reclaim({ from: owner });
+      assertEvent(tx2, 'Reclaim', 'Did not emit `Reclaim` event');
       assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
     });
 
     it('reclaimed tokens are transfered to the owner of the contract', async () => {
       await increaseTime(oneDay * 5);
       const ownerInitialBalance = await token.balanceOf.call(owner);
-      await tokenTimelockPool.reclaim({ from: owner });
+      const tx = await tokenTimelockPool.reclaim({ from: owner });
+      assertEvent(tx, 'Reclaim', 'Did not emit `Reclaim` event');
       const ownerAfterReclaimBalance = await token.balanceOf.call(owner);
 
       assert.ok(ownerInitialBalance.plus(totalFunds).eq(ownerAfterReclaimBalance));
@@ -238,14 +291,19 @@ contract('TokenTimelockPool', (accounts) => {
     });
 
     it('does not reclaim tokens that are on hold', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const tx1 = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx1, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
       await increaseTime(oneDay * 5);
 
       const b1Timelocks = await tokenTimelockPool.getDistributionContracts(beneficiary1);
       const b1Timelock = b1Timelocks[0];
       assert.equal((await token.balanceOf.call(b1Timelock)), beneficiary1Amount1);
 
-      await tokenTimelockPool.reclaim({ from: owner });
+      const tx2 = await tokenTimelockPool.reclaim({ from: owner });
+      assertEvent(tx2, 'Reclaim', 'Did not emit `Reclaim` event');
       assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
 
       assert.equal((await token.balanceOf.call(b1Timelock)), beneficiary1Amount1);
@@ -262,25 +320,41 @@ contract('TokenTimelockPool', (accounts) => {
     });
 
     it('does not modify total funds after adding a beneficiary', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const tx = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
       const funds = await tokenTimelockPool.totalFunds();
       assert.equal(funds, totalFunds, 'Total Funds changed');
     });
 
     it('updates distributed tokens after adding a beneficiary', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const tx = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
       const distributedTokens = await tokenTimelockPool.distributedTokens();
       assert.equal(distributedTokens, beneficiary1Amount1, 'Distributed Tokens is not correct');
     });
 
     it('updates beneficiaries list after adding a beneficiary', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const tx = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
       const beneficiary = await tokenTimelockPool.beneficiaries(0);
       assert.equal(beneficiary, beneficiary1, 'Beneficiaries list is not correct');
     });
 
     it('updates beneficiary distribution contracts mapping after adding a beneficiary', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
+      const tx = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
       const contractAddress = await tokenTimelockPool.beneficiaryDistributionContracts(
         beneficiary1,
         0,
@@ -291,13 +365,62 @@ contract('TokenTimelockPool', (accounts) => {
       assert.equal(contractAddress, contracts[0], 'Distribution contracts list should have mapping content');
       assert.equal(timelockBeneficiary, beneficiary1, 'Distribution contract does not belong to beneficiary');
     });
+
+    it('new owner reclaims tokens after claiming ownership ', async () => {
+      await increaseTime(oneDay * 5);
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), totalFunds);
+
+      await tokenTimelockPool.transferOwnership(newOwner, { from: owner });
+      await tokenTimelockPool.claimOwnership({ from: newOwner });
+
+      const tx = await tokenTimelockPool.reclaim({ from: newOwner });
+      assertEvent(tx, 'Reclaim', 'Did not emit `Reclaim` event');
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
+    });
+
+    it('previous owner reclaims tokens after transferring ownership if it hasnt been claimed', async () => {
+      await increaseTime(oneDay * 5);
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), totalFunds);
+
+      await tokenTimelockPool.transferOwnership(newOwner, { from: owner });
+
+      const tx = await tokenTimelockPool.reclaim({ from: owner });
+      assertEvent(tx, 'Reclaim', 'Did not emit `Reclaim` event');
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
+    });
+
+    it('previous owner cannot reclaim tokens after the new owner claims ownership', async () => {
+      await increaseTime(oneDay * 5);
+      assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), totalFunds);
+
+      await tokenTimelockPool.transferOwnership(newOwner, { from: owner });
+      await tokenTimelockPool.claimOwnership({ from: newOwner });
+
+      try {
+        await tokenTimelockPool.reclaim({ from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
   });
 
   context('Integration Test', () => {
     it('performs all actions successfully', async () => {
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount1, { from: owner });
-      await tokenTimelockPool.addBeneficiary(beneficiary1, beneficiary1Amount2, { from: owner });
-      await tokenTimelockPool.addBeneficiary(beneficiary2, beneficiary2Amount1, { from: owner });
+      const tx1 = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount1, { from: owner },
+      );
+      assertEvent(tx1, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const tx2 = await tokenTimelockPool.addBeneficiary(
+        beneficiary1, beneficiary1Amount2, { from: owner },
+      );
+      assertEvent(tx2, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
+
+      const tx3 = await tokenTimelockPool.addBeneficiary(
+        beneficiary2, beneficiary2Amount1, { from: owner },
+      );
+      assertEvent(tx3, 'BeneficiaryAdded', 'Did not emit `BeneficiaryAdded` event');
 
       assert.equal((await token.balanceOf.call(beneficiary1)), 0);
       assert.equal((await token.balanceOf.call(beneficiary2)), 0);
@@ -341,7 +464,8 @@ contract('TokenTimelockPool', (accounts) => {
       );
 
       assert.ok((await token.balanceOf.call(tokenTimelockPool.address)) > 0);
-      await tokenTimelockPool.reclaim();
+      const tx = await tokenTimelockPool.reclaim();
+      assertEvent(tx, 'Reclaim', 'Did not emit `Reclaim` event');
       assert.equal((await token.balanceOf.call(tokenTimelockPool.address)), 0);
     });
   });
