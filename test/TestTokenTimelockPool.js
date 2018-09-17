@@ -3,7 +3,7 @@ const {
 } = require('./utils/helpers');
 
 const TokenTimelockPool = artifacts.require('./TokenTimelockPool.sol');
-const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
+const ERC20Token = artifacts.require('../test/utils/WIBToken.sol');
 const TokenTimelock = artifacts.require('TokenTimelock');
 
 contract('TokenTimelockPool', (accounts) => {
@@ -25,7 +25,7 @@ contract('TokenTimelockPool', (accounts) => {
   });
 
   beforeEach(async () => {
-    token = await Wibcoin.new({ from: owner });
+    token = await ERC20Token.new({ from: owner });
     releaseDate = now() + oneDay;
     totalFunds = 50000;
     tokenTimelockPool = await TokenTimelockPool.new(token.address, totalFunds, releaseDate, {

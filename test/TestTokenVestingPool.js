@@ -4,7 +4,7 @@ const {
 } = require('./utils/helpers');
 
 const TokenVestingPool = artifacts.require('./TokenVestingPool.sol');
-const Wibcoin = artifacts.require('../test/utils/Wibcoin.sol');
+const ERC20Token = artifacts.require('../test/utils/WIBToken.sol');
 const TokenVesting = artifacts.require('TokenVesting');
 
 contract('TokenVestingPool', (accounts) => {
@@ -28,7 +28,7 @@ contract('TokenVestingPool', (accounts) => {
 
   beforeEach(async () => {
     start = now();
-    token = await Wibcoin.new({ from: owner });
+    token = await ERC20Token.new({ from: owner });
   });
 
   describe('#constructor', () => {
