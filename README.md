@@ -14,7 +14,7 @@ vi deploy.json
 * `infuraToken`: The API key supplied by [Infura](https://infura.io/) to be used on remote environments.
 * `environments`: Allowed keys are `development`, `test`, `coverage`, `remoteDevelopment`, `staging`, `production`.
 * Environment options:
-    * `tokenAddress`: An Ethereum address of an existing `Wibcoin` contract.
+    * `tokenAddress`: An Ethereum address of an existing ERC-20 contract.
     * `mnemonic`: Twelve word mnemonic to create the deployer account.
     * `owner`: Owner of the TokenPools to ve deployed.
 
