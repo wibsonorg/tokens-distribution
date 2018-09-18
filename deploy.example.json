@@ -11,7 +11,7 @@
         "totalFunds": 1000000,
         "releaseDate": 1669014000
       },
-      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
+      "deployPrivateKey": "<private-key-without-0x>"
     },
     "remoteDevelopment": {
       "ownerAccountIndex": 0,
@@ -24,7 +24,7 @@
         "totalFunds": 1000000,
         "releaseDate": 1669014000
       },
-      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
+      "deployPrivateKey": "<private-key-without-0x>"
     },
     "staging": {
       "ownerAccountIndex": 0,
@@ -37,7 +37,7 @@
         "totalFunds": 1000000,
         "releaseDate": 1669014000
       },
-      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
+      "deployPrivateKey": "<private-key-without-0x>"
     },
     "production": {
       "ownerAccountIndex": 0,
@@ -50,7 +50,7 @@
         "totalFunds": 1000000,
         "releaseDate": 1669014000
       },
-      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby"
+      "deployPrivateKey": "<private-key-without-0x>"
     }
   }
 }

@@ -15,7 +15,7 @@ vi deploy.json
 * `environments`: Allowed keys are `development`, `test`, `coverage`, `remoteDevelopment`, `staging`, `production`.
 * Environment options:
     * `tokenAddress`: An Ethereum address of an existing ERC-20 contract.
-    * `mnemonic`: Twelve word mnemonic to create the deployer account.
+    * `deployPrivateKey`: Private key for the deployer account only used in remote environments.
     * `owner`: Owner of the TokenPools to ve deployed.
 
 
@@ -55,3 +55,7 @@ npm run truffle -- console --network staging # To test within the console
 | Migrations        | `0x`    |
 | TokenVestingPool  | `0x`    |
 | TokenTimelockPool | `0x`    |
+
+## License
+
+LGPL-3.0
