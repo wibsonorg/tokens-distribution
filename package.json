@@ -1,8 +1,8 @@
 {
   "name": "wibson-tokens-distribution",
-  "version": "0.1.0",
-  "private": true,
-  "author": "Wibson Development Team",
+  "version": "1.0.0",
+  "author": "Wibson Development Team <developers@wibson.org>",
+  "license": "LGPL-3.0",
   "scripts": {
     "compile": "truffle compile",
     "ganache": "ganache-cli",
@@ -25,12 +25,15 @@
     "eslint": "^5.2.0",
     "eslint-config-airbnb-base": "^13.0.0",
     "eslint-plugin-import": "^2.13.0",
+    "ethereumjs-wallet": "0.6.0",
     "ganache-cli": "^6.1.6",
     "solidity-coverage": "^0.5.5",
     "solium": "^1.1.8",
     "solium-plugin-zeppelin": "0.0.2",
     "truffle": "^4.1.13",
-    "truffle-hdwallet-provider": "0.0.6"
+    "truffle-hdwallet-provider": "0.0.6",
+    "web3": "^0.18.2",
+    "web3-provider-engine": "^14.0.5"
   },
   "dependencies": {
     "openzeppelin-solidity": "^1.12.0"
