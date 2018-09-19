@@ -1,4 +1,6 @@
-# Wibson Tokens Distribution
+# <img src="logo.png" alt="Wibson" width="400px">
+
+**tokens-distribution** enables the user to set a pool of ERC-20 tokens to distribute among beneficiaries providing a lock-up and vesting mechanism through smart contracts. The amount of tokens for the pool is defined at creation and can not be changed.
 
 ## Getting Started
 In order to **deploy** to any environment, the `deploy.json` file must be set up.
@@ -56,6 +58,14 @@ npm run truffle -- console --network staging # To test within the console
 | TokenVestingPool  | `0x`    |
 | TokenTimelockPool | `0x`    |
 
-## License
+## Reporting Security Vulnerabilities
+If you think that you have found a security issue in this repository, please **DO NOT** use post it as a Github issue and don't publish it publicly. Instead, all security issues must be sent to developers@wibson.org.
+Although we are working on setting up a bug bounty program to improve this, we appreciate your discretion and will give the corresponding credit to the reporter(s).
 
-LGPL-3.0
+## Contribute
+Thank you for thinking about contributing to the Tokens Distribution repository. There are many ways you can participate and help build high quality software. Check out the [contribution guide]!
+
+## License
+Tokens Distribution is released under the [LGPL-3.0](LICENSE).
+
+[contribution guide]: CONTRIBUTING.md
