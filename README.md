@@ -59,7 +59,7 @@ npm run truffle -- console --network staging # To test within the console
 | TokenTimelockPool | `0x`    |
 
 ## Reporting Security Vulnerabilities
-If you think that you have found a security issue in this repository, please **DO NOT** use post it as a Github issue and don't publish it publicly. Instead, all security issues must be sent to developers@wibson.org.
+If you think that you have found a security issue in this repository, please **DO NOT** post it as a Github issue and don't publish it publicly. Instead, all security issues must be sent to developers@wibson.org.
 Although we are working on setting up a bug bounty program to improve this, we appreciate your discretion and will give the corresponding credit to the reporter(s).
 
 ## Contribute
